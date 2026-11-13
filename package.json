@@ -1,0 +1,11 @@
+{
+  "name": "fenix-kalkulatory",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Four small calculators built by Fenix, Jointhubs' team of AI agents.",
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "MIT"
+}
