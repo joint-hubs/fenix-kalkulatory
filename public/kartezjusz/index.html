@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kalkulator Kartezjusza · Fenix</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Kalkulator Kartezjusza</h1>
+      <p class="podtytul">Zgłasza: Kartezjusz (1596-1650)</p>
+    </header>
+    <p class="wstep">Wątpię we wszystko, ale przeczucie to nie liczba. Podaj, jak rzadka jest rzecz, którą świadek ogląda, i jak często świadek mówi prawdę, a powiem ci, jak daleko ufać jego zgłoszeniu.</p>
+    <form id="pytanie">
+      <div class="pole">
+        <label for="rzadkosc">Jak rzadka jest rzecz? 1 na tyle przypadków:</label>
+        <input id="rzadkosc" name="rzadkosc" type="number" min="1" step="1" value="1000" inputmode="numeric">
+      </div>
+      <div class="pole">
+        <label for="wiarygodnosc">Jak często świadek mówi prawdę? (od 0 do 100)</label>
+        <input id="wiarygodnosc" name="wiarygodnosc" type="number" min="0" max="100" step="1" value="99" inputmode="numeric">
+        <span class="jednostka">% przypadków</span>
+      </div>
+      <button type="submit">Policz</button>
+    </form>
+    <section id="wynik" aria-live="polite">
+      <p id="ocena"></p>
+      <p id="wyjasnienie"></p>
+      <p id="dopisek" hidden></p>
+    </section>
+    <figure>
+      <svg id="mapa" viewBox="0 0 340 176" role="img" aria-label="Wykres tysiąca przypadków na osiach Kartezjusza: świeci jedno zdarzenie prawdziwe oraz kropki pomylek świadka">
+        <g id="osie">
+          <line class="os" x1="30" y1="8" x2="30" y2="152"></line>
+          <line class="os" x1="30" y1="152" x2="332" y2="152"></line>
+          <text class="os-napis" x="181" y="168" text-anchor="middle">1000 przypadków</text>
+          <text class="os-napis" x="26" y="16" text-anchor="end">0</text>
+        </g>
+        <g id="kropki"></g>
+      </svg>
+      <figcaption class="legenda">
+        <span><span class="probka zdarzenie"></span>rzecz zdarzyła się naprawdę</span>
+        <span><span class="probka pomylka"></span>świadek się pomylił</span>
+        <span><span class="probka nic"></span>nic się nie zdarzyło</span>
+      </figcaption>
+    </figure>
+    <footer>
+      <p>Zbudował Fenix, zespół agentów AI Jointhubs.</p>
+    </footer>
+  </main>
+  <script type="module">
+    import { resultFor, dotCounts } from "./calc.js";
+
+    const form = document.getElementById("pytanie");
+    const wynik = document.getElementById("wynik");
+    const ocena = document.getElementById("ocena");
+    const wyjasnienie = document.getElementById("wyjasnienie");
+    const dopisek = document.getElementById("dopisek");
+    const kropki = document.getElementById("kropki");
+
+    const KOLUMNY = 40;
+    const RZEDY = 25;
+    const X0 = 36;
+    const X1 = 330;
+    const Y0 = 10;
+    const Y1 = 146;
+    const NS = "http://www.w3.org/2000/svg";
+
+    const elementy = [];
+    for (let rzad = 0; rzad < RZEDY; rzad += 1) {
+      for (let kol = 0; kol < KOLUMNY; kol += 1) {
+        const kropka = document.createElementNS(NS, "circle");
+        kropka.setAttribute("cx", (X0 + (kol * (X1 - X0)) / (KOLUMNY - 1)).toFixed(2));
+        kropka.setAttribute("cy", (Y0 + (rzad * (Y1 - Y0)) / (RZEDY - 1)).toFixed(2));
+        kropka.setAttribute("r", 2.2);
+        kropka.setAttribute("class", "kropka nic");
+        kropki.appendChild(kropka);
+        elementy.push(kropka);
+      }
+    }
+
+    function przelicz() {
+      const n = Number(document.getElementById("rzadkosc").value);
+      const t = Number(document.getElementById("wiarygodnosc").value);
+      dopisek.hidden = true;
+      dopisek.textContent = "";
+      try {
+        const rachunek = resultFor(n, t);
+        ocena.textContent = rachunek.chanceText;
+        wyjasnienie.textContent = rachunek.sentence;
+        if (rachunek.perfectWitness) {
+          dopisek.textContent = rachunek.note;
+          dopisek.hidden = false;
+        }
+        const kropkiRachunek = dotCounts(n, t);
+        elementy.forEach((kropka, i) => {
+          const klasa = i < kropkiRachunek.truth
+            ? "kropka zdarzenie"
+            : i < kropkiRachunek.truth + kropkiRachunek.errors
+              ? "kropka pomylka"
+              : "kropka nic";
+          kropka.setAttribute("class", klasa);
+        });
+        wynik.classList.remove("blad");
+      } catch (blad) {
+        ocena.textContent = "?";
+        wyjasnienie.textContent = blad.message;
+        wynik.classList.add("blad");
+        elementy.forEach((kropka) => kropka.setAttribute("class", "kropka nic"));
+      }
+    }
+
+    form.addEventListener("submit", (zdarzenie) => {
+      zdarzenie.preventDefault();
+      przelicz();
+    });
+    form.addEventListener("input", przelicz);
+    przelicz();
+  </script>
+</body>
+</html>

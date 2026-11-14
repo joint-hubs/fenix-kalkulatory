@@ -1,0 +1,191 @@
+/* Kalkulator Kartezjusza: jasny papier, czarny atrament, kroj traktatu. */
+
+:root {
+  --papier: #f4ead6;
+  --marmur: #f8f1e1;
+  --atrament: #2f2a22;
+  --mgla: #5c5243;
+  --braz: #7a5c2e;
+  --linia: #c9b98f;
+  --blad: #8a1f1f;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--papier);
+  color: var(--atrament);
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.6;
+}
+
+main {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+}
+
+h1 {
+  font-size: 1.7rem;
+  line-height: 1.2;
+  margin: 0 0 0.25rem;
+}
+
+.podtytul {
+  color: var(--mgla);
+  font-style: italic;
+  margin: 0 0 1.25rem;
+}
+
+.wstep {
+  margin: 0 0 1.25rem;
+}
+
+form {
+  background: var(--marmur);
+  border: 1px solid var(--linia);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+}
+
+.pole {
+  margin-bottom: 1rem;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+input[type="number"] {
+  font: inherit;
+  color: inherit;
+  background: var(--papier);
+  border: 1px solid var(--mgla);
+  border-radius: 8px;
+  padding: 0.4rem 0.6rem;
+  width: 7.5rem;
+}
+
+input[type="number"]:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--braz);
+  outline-offset: 2px;
+}
+
+.jednostka {
+  color: var(--mgla);
+  margin-left: 0.4rem;
+}
+
+button {
+  font: inherit;
+  background: var(--atrament);
+  color: var(--papier);
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1.2rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #463e30;
+}
+
+#wynik {
+  margin-top: 1.5rem;
+}
+
+#ocena {
+  font-size: 2.4rem;
+  font-weight: bold;
+  line-height: 1.1;
+  margin: 0;
+}
+
+#wyjasnienie {
+  color: var(--mgla);
+  font-style: italic;
+  margin: 0.5rem 0 0;
+}
+
+#dopisek {
+  font-weight: bold;
+  margin: 0.5rem 0 0;
+}
+
+#wynik.blad #ocena {
+  color: var(--blad);
+}
+
+figure {
+  margin: 1.5rem 0 0;
+}
+
+#mapa {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.os {
+  stroke: var(--mgla);
+  stroke-width: 1;
+}
+
+.os-napis {
+  font-size: 9px;
+  fill: var(--mgla);
+}
+
+.kropka.zdarzenie { fill: var(--atrament); }
+.kropka.pomylka { fill: var(--braz); }
+.kropka.nic { fill: var(--linia); }
+
+.legenda {
+  color: var(--mgla);
+  font-size: 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin-top: 0.5rem;
+}
+
+.probka {
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  border-radius: 50%;
+  margin-right: 0.3em;
+}
+
+.probka.zdarzenie { background: var(--atrament); }
+.probka.pomylka { background: var(--braz); }
+.probka.nic { background: var(--linia); }
+
+footer {
+  border-top: 1px solid var(--linia);
+  color: var(--mgla);
+  font-size: 0.85rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+}
+
+footer p { margin: 0; }
+
+@media (max-width: 420px) {
+  main {
+    padding: 1.25rem 0.75rem 2rem;
+  }
+
+  #ocena {
+    font-size: 2rem;
+  }
+
+  input[type="number"] {
+    width: 100%;
+    max-width: 10rem;
+  }
+}
