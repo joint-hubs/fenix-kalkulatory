@@ -62,6 +62,33 @@ test("wykres liczy 1000 kropek, swieci zdarzenie i pomylki swiadka", () => {
   assert.equal(dotCounts(1000, 0).errors, 999);
 });
 
+test("1 na 10 przy 90 procentach: zdanie liczy zgloszenia, nie zdarzenia, bez zaledwie", () => {
+  const dots = dotCounts(10, 90);
+  assert.equal(dots.truth, 90, "prawdziwe zgloszenia = 1000 * (1/10) * 0,9");
+  assert.equal(dots.errors, 90);
+  assert.equal(dots.claimed, 180);
+  const { sentence } = resultFor(10, 90);
+  assert.match(sentence, /Na ok\. 180 zgłoszeń/);
+  assert.match(sentence, /przypada 90 prawdziwych/);
+  assert.ok(!/zaledwie/.test(sentence), "przy dokladnie 50 procentach bez zaledwie");
+});
+
+test("1 na 1000 przy 99 procentach: zdanie liczy zgloszenia i mowi zaledwie", () => {
+  const dots = dotCounts(1000, 99);
+  assert.equal(dots.truth, 1);
+  assert.equal(dots.errors, 10);
+  assert.equal(dots.claimed, 11);
+  const { sentence } = resultFor(1000, 99);
+  assert.match(sentence, /Na ok\. 11 zgłoszeń/);
+  assert.match(sentence, /przypada zaledwie 1 prawdziwe/);
+});
+
+test("zaledwie wraca, gdy wynik spada ponizej polowy", () => {
+  const chance = posteriorChance(2, 40);
+  assert.ok(chance < 0.5, `sanity: oczekiwano ponizej polowy, bylo ${chance}`);
+  assert.match(resultFor(2, 40).sentence, /zaledwie/);
+});
+
 test("wykres jest inline SVG na ukladzie wspolrzednych z legenda", () => {
   assert.match(html, /<svg[^>]*id="mapa"/);
   assert.match(html, /viewBox="/);

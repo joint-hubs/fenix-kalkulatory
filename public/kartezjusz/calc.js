@@ -46,9 +46,11 @@ export function formatPercent(fraction) {
 
 export function dotCounts(rarityN, trustPercent) {
   requireInputs(rarityN, trustPercent);
-  const truth = Math.round(DOT_TOTAL / rarityN);
+  // Kropki liczą zgłoszenia, nie zdarzenia: świadek część prawdziwych
+  // zdarzeń przeocza, część zwykłych przypadków bierze za zdarzenie.
   const r = trustPercent / 100;
-  const errors = Math.round((DOT_TOTAL - truth) * (1 - r));
+  const truth = Math.round(DOT_TOTAL * (1 / rarityN) * r);
+  const errors = Math.round(DOT_TOTAL * (1 - 1 / rarityN) * (1 - r));
   return { total: DOT_TOTAL, truth, errors, claimed: truth + errors };
 }
 
@@ -66,9 +68,11 @@ export function sentenceFor(rarityN, trustPercent) {
     return "Świadek nieomylny nie zna pomyłki: jego zgłoszenie wystarcza, by uznać rzecz za zdarzoną.";
   }
   const dots = dotCounts(rarityN, trustPercent);
+  // „Zaledwie" tylko przy wyniku poniżej połowy; przy dokładnie 50% bez niego.
+  const zaledwie = posteriorChance(rarityN, trustPercent) < 0.5 ? "zaledwie " : "";
   return (
     `Na ok. ${dots.claimed} ${odmien(dots.claimed, ["zgłoszenie", "zgłoszenia", "zgłoszeń"])} ` +
-    `przypada zaledwie ${dots.truth} ${odmien(dots.truth, ["prawdziwe", "prawdziwe", "prawdziwych"])}, ` +
+    `przypada ${zaledwie}${dots.truth} ${odmien(dots.truth, ["prawdziwe", "prawdziwe", "prawdziwych"])}, ` +
     `bo rzecz zdarza się raz na ${rarityN} przypadków, a świadek pomyłkami ją zagłusza.`
   );
 }
