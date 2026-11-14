@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arystoteles · Jak dawno wyruszyło światło?</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="pas pas-gorny" aria-hidden="true"></div>
+  <main>
+    <h1>Jak dawno wyruszyło światło?</h1>
+    <p class="zglasza">Zgłasza: Arystoteles (384-322 p.n.e.)</p>
+    <p class="lead">Wybierz obiekt z listy, a powiem ci, jak długo leciało jego światło, zanim doszło do twoich oczu.</p>
+
+    <div class="mapa">
+      <svg viewBox="0 0 320 170" aria-hidden="true">
+        <g class="punkt" data-id="ksiezyc" transform="translate(64, 122)">
+          <circle class="halo" r="15"></circle>
+          <circle class="jasny" r="6"></circle>
+          <text y="26">Księżyc</text>
+        </g>
+        <g class="punkt" data-id="slonce" transform="translate(150, 84)">
+          <circle class="halo" r="15"></circle>
+          <circle class="jasny" r="8"></circle>
+          <text y="28">Słońce</text>
+        </g>
+        <g class="punkt" data-id="syriusz" transform="translate(240, 132)">
+          <circle class="halo" r="15"></circle>
+          <circle class="jasny" r="5"></circle>
+          <text y="26">Syriusz</text>
+        </g>
+        <g class="punkt" data-id="gwiazda-polarna" transform="translate(84, 38)">
+          <circle class="halo" r="15"></circle>
+          <circle class="jasny" r="5"></circle>
+          <text y="-16">Gwiazda Polarna</text>
+        </g>
+        <g class="punkt" data-id="galaktyka-andromedy" transform="translate(230, 40)">
+          <circle class="halo" r="15"></circle>
+          <circle class="jasny" r="7"></circle>
+          <text y="26">Galaktyka</text>
+          <text y="39">Andromedy</text>
+        </g>
+      </svg>
+    </div>
+
+    <form id="kalkulator">
+      <fieldset>
+        <legend>Obiekt na niebie</legend>
+        <label class="opcja"><input type="radio" name="obiekt" value="ksiezyc"> Księżyc</label>
+        <label class="opcja"><input type="radio" name="obiekt" value="slonce"> Słońce</label>
+        <label class="opcja"><input type="radio" name="obiekt" value="syriusz"> Syriusz</label>
+        <label class="opcja"><input type="radio" name="obiekt" value="gwiazda-polarna"> Gwiazda Polarna</label>
+        <label class="opcja"><input type="radio" name="obiekt" value="galaktyka-andromedy"> Galaktyka Andromedy</label>
+      </fieldset>
+    </form>
+
+    <section id="wynik" aria-live="polite">
+      <p class="wskazowka" id="wskazowka">Najpierw wybierz obiekt z listy.</p>
+      <div id="monolog"></div>
+    </section>
+    <footer>
+      <p>Zbudował Fenix, zespół agentów AI Jointhubs.</p>
+    </footer>
+  </main>
+  <div class="pas pas-dolny" aria-hidden="true"></div>
+  <script type="module">
+    import { monologue } from "./calc.js";
+
+    const form = document.getElementById("kalkulator");
+    const wskazowka = document.getElementById("wskazowka");
+    const monolog = document.getElementById("monolog");
+    const punkty = [...document.querySelectorAll(".punkt")];
+
+    function pokaz(id) {
+      const zdania = monologue(id, new Date().getFullYear());
+      monolog.replaceChildren(...zdania.map((zdanie) => {
+        const p = document.createElement("p");
+        p.textContent = zdanie;
+        return p;
+      }));
+      wskazowka.hidden = true;
+      for (const punkt of punkty) {
+        punkt.classList.toggle("wybrany", punkt.dataset.id === id);
+      }
+      const radio = document.querySelector(`input[name="obiekt"][value="${id}"]`);
+      if (radio) radio.checked = true;
+    }
+
+    form.addEventListener("submit", (event) => event.preventDefault());
+    form.addEventListener("change", (event) => {
+      if (event.target.name === "obiekt") pokaz(event.target.value);
+    });
+
+    for (const punkt of punkty) {
+      punkt.addEventListener("click", () => pokaz(punkt.dataset.id));
+    }
+  </script>
+</body>
+</html>
