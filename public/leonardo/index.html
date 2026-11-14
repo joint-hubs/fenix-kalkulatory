@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Machina latająca · Zgłoszenie Leonarda da Vinci · Fenix · Kalkulatory</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1 class="tytul" aria-label="Machina latająca"><span class="lustro" aria-hidden="true">Machina latająca</span></h1>
+      <p class="podpis">Pisane od prawej, jak u mistrza.</p>
+      <p class="autor">Zgłasza: Leonardo da Vinci (1452-1519)</p>
+    </header>
+    <p>Sprawdź, czy Twoja machina latająca uniesie człowieka, zanim skoczysz z góry. Wpisz masę lotnika razem z machiną, powierzchnię skrzydeł i prędkość.</p>
+
+    <svg id="szkic" class="stoi" viewBox="0 0 320 140" role="img" aria-label="Szkic machiny latającej na zboczu góry">
+      <path class="kreska" d="M 0 124 L 70 92 L 110 101 L 210 55 L 320 30" />
+      <g class="kreskowanie">
+        <path d="M 18 122 L 28 132" />
+        <path d="M 52 106 L 62 116" />
+        <path d="M 92 102 L 102 112" />
+        <path d="M 126 96 L 136 106" />
+        <path d="M 146 88 L 156 98" />
+        <path d="M 180 72 L 190 82" />
+        <path d="M 218 58 L 228 68" />
+        <path d="M 262 48 L 272 58" />
+      </g>
+      <g transform="translate(160 78)">
+        <g id="machina">
+          <g id="skrzydla">
+            <g class="skrzydlo">
+              <path class="blona" d="M 12 -26 C 26 -38 38 -45 44 -46 Q 51 -40 62 -38 Q 66 -31 70 -24 Q 72 -16 72 -8 Q 68 -1 62 6 L 12 -26 Z" />
+              <path class="zebro" d="M 12 -26 L 44 -46" />
+              <path class="zebro" d="M 12 -26 L 62 -38" />
+              <path class="zebro" d="M 12 -26 L 70 -24" />
+              <path class="zebro" d="M 12 -26 L 72 -8" />
+              <path class="zebro" d="M 12 -26 L 62 6" />
+            </g>
+            <g class="skrzydlo" transform="scale(-1 1)">
+              <path class="blona" d="M 12 -26 C 26 -38 38 -45 44 -46 Q 51 -40 62 -38 Q 66 -31 70 -24 Q 72 -16 72 -8 Q 68 -1 62 6 L 12 -26 Z" />
+              <path class="zebro" d="M 12 -26 L 44 -46" />
+              <path class="zebro" d="M 12 -26 L 62 -38" />
+              <path class="zebro" d="M 12 -26 L 70 -24" />
+              <path class="zebro" d="M 12 -26 L 72 -8" />
+              <path class="zebro" d="M 12 -26 L 62 6" />
+            </g>
+          </g>
+          <path class="rama" d="M 0 -2 L 0 -36 M -30 -28 L 30 -28 M -18 -2 L 0 -28 M 18 -2 L 0 -28" />
+          <g class="lotnik">
+            <circle cx="-15" cy="-6" r="3.5" />
+            <path d="M -11 -5 Q 0 -9 13 -5" />
+            <path d="M -3 -7 L 0 -19" />
+            <path d="M 13 -5 Q 19 -2 17 1" />
+          </g>
+          <g class="cien">
+            <path d="M -8 -13 L -4 -17" />
+            <path d="M 8 -11 L 12 -15" />
+            <path d="M -20 -3 L -16 -7" />
+          </g>
+        </g>
+      </g>
+    </svg>
+    <p class="notatka" aria-hidden="true">studium skrzydeł</p>
+
+    <form id="kalkulator">
+      <label for="masa">Masa lotnika razem z machiną (kg)</label>
+      <input id="masa" name="masa" type="text" inputmode="decimal"
+             autocomplete="off" spellcheck="false" placeholder="90">
+      <label for="pole">Powierzchnia skrzydeł (m²)</label>
+      <input id="pole" name="pole" type="text" inputmode="decimal"
+             autocomplete="off" spellcheck="false" placeholder="10">
+      <label for="predkosc">Prędkość (km/h)</label>
+      <input id="predkosc" name="predkosc" type="text" inputmode="decimal"
+             autocomplete="off" spellcheck="false" placeholder="20">
+      <button type="submit" id="sprawdz">Sprawdź</button>
+    </form>
+
+    <output id="wynik" for="masa pole predkosc" aria-live="polite">
+      <p id="werdykt"></p>
+    </output>
+
+    <p class="zalozenia">Założenia: gęstość powietrza ρ = 1,225 kg/m³, współczynnik wznoszenia CL = 1,2, przyspieszenie ziemskie g = 9,81 m/s². Siła nośna L = 0,5 · ρ · v² · S · CL, porównana z masą razy g.</p>
+  </main>
+  <script type="module">
+    import { evaluate, wingspanPx } from "./calc.js";
+
+    const form = document.querySelector("#kalkulator");
+    const werdykt = document.querySelector("#werdykt");
+    const wynik = document.querySelector("#wynik");
+    const szkic = document.querySelector("#szkic");
+    const skrzydla = document.querySelector("#skrzydla");
+
+    function pokazSkrzydla() {
+      const k = wingspanPx(document.querySelector("#pole").value) / 100;
+      skrzydla.setAttribute("transform", `scale(${k} 1)`);
+    }
+
+    function pokazWynik() {
+      const result = evaluate({
+        massKg: document.querySelector("#masa").value,
+        areaM2: document.querySelector("#pole").value,
+        speedKmh: document.querySelector("#predkosc").value,
+      });
+      werdykt.textContent = result.speech;
+      wynik.classList.toggle("blad", !result.ok);
+      const leci = Boolean(result.ok && result.flies);
+      szkic.classList.toggle("leci", leci);
+      szkic.classList.toggle("stoi", !leci);
+      pokazSkrzydla();
+    }
+
+    document.querySelector("#pole").addEventListener("input", pokazSkrzydla);
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      pokazWynik();
+    });
+
+    pokazSkrzydla();
+  </script>
+</body>
+</html>
