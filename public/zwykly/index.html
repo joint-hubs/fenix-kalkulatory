@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zwykłe zgłoszenie · Fenix · Kalkulatory</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Zwykłe zgłoszenie</h1>
+    <p>Prosty kalkulator do dodawania, odejmowania, mnożenia i dzielenia. Wpisz działanie i naciśnij Enter albo przycisk =.</p>
+    <form id="kalkulator">
+      <label for="wyrazenie">Działanie</label>
+      <input id="wyrazenie" name="wyrazenie" type="text" inputmode="decimal"
+             autocomplete="off" spellcheck="false" placeholder="2 + 2">
+      <div class="klawisze">
+        <button type="button" data-wstaw="7">7</button>
+        <button type="button" data-wstaw="8">8</button>
+        <button type="button" data-wstaw="9">9</button>
+        <button type="button" data-wstaw="÷">÷</button>
+        <button type="button" data-wstaw="4">4</button>
+        <button type="button" data-wstaw="5">5</button>
+        <button type="button" data-wstaw="6">6</button>
+        <button type="button" data-wstaw="×">×</button>
+        <button type="button" data-wstaw="1">1</button>
+        <button type="button" data-wstaw="2">2</button>
+        <button type="button" data-wstaw="3">3</button>
+        <button type="button" data-wstaw="-">-</button>
+        <button type="button" data-wstaw="0">0</button>
+        <button type="button" data-wstaw=",">,</button>
+        <button type="button" data-wstaw="+">+</button>
+        <button type="submit" id="policz">=</button>
+        <button type="button" id="wyczysc">Wyczyść</button>
+      </div>
+      <output id="wynik" for="wyrazenie" aria-live="polite"></output>
+    </form>
+  </main>
+  <script type="module">
+    import { evaluate, formatNumber } from "./calc.js";
+
+    const form = document.querySelector("#kalkulator");
+    const wyrazenie = document.querySelector("#wyrazenie");
+    const wynik = document.querySelector("#wynik");
+
+    function pokazWynik() {
+      const result = evaluate(wyrazenie.value);
+      if (result.ok) {
+        wynik.textContent = formatNumber(result.value);
+        wynik.classList.remove("blad");
+      } else {
+        wynik.textContent = result.error;
+        wynik.classList.add("blad");
+      }
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      pokazWynik();
+    });
+
+    for (const button of document.querySelectorAll("[data-wstaw]")) {
+      button.addEventListener("click", () => {
+        wyrazenie.value += button.dataset.wstaw;
+        wyrazenie.focus();
+      });
+    }
+
+    document.querySelector("#wyczysc").addEventListener("click", () => {
+      wyrazenie.value = "";
+      wynik.textContent = "";
+      wynik.classList.remove("blad");
+      wyrazenie.focus();
+    });
+  </script>
+</body>
+</html>
