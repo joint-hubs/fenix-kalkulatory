@@ -1,0 +1,216 @@
+/* A page from Leonardo's notebook: sepia paper, brown ink, thin lines. */
+
+:root {
+  --papier: #f2e3c2;
+  --papier-jasny: #f9f0d8;
+  --blona: #e4d0a2;
+  --atrament: #4a2c0a;
+  --atrament-mgla: #6b4423;
+  --kreska: #8b6234;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  background: var(--papier);
+  color: var(--atrament);
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+main {
+  width: 100%;
+  max-width: 26rem;
+}
+
+header {
+  border-bottom: 1px solid var(--kreska);
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+h1 {
+  font-family: 'Segoe Print', 'Bradley Hand', cursive;
+  font-size: 1.9rem;
+  margin: 0 0 .5rem;
+}
+
+.lustro {
+  display: inline-block;
+  transform: scaleX(-1);
+}
+
+.podpis { margin: 0 0 .35rem; }
+
+.autor {
+  margin: 0;
+  color: var(--atrament-mgla);
+  font-size: .95rem;
+}
+
+p { line-height: 1.55; margin: 0 0 1rem; }
+
+#szkic {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 0 .25rem;
+}
+
+.kreska {
+  fill: none;
+  stroke: var(--atrament);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.kreskowanie {
+  fill: none;
+  stroke: var(--atrament);
+  stroke-width: .9;
+  stroke-linecap: round;
+  opacity: .55;
+}
+
+.blona {
+  fill: var(--blona);
+  stroke: var(--atrament);
+  stroke-width: 1.3;
+  stroke-linejoin: round;
+}
+
+.zebro {
+  fill: none;
+  stroke: var(--atrament);
+  stroke-width: .8;
+  stroke-linecap: round;
+  opacity: .85;
+}
+
+.rama {
+  fill: none;
+  stroke: var(--atrament);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lotnik {
+  fill: none;
+  stroke: var(--atrament);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.cien {
+  fill: none;
+  stroke: var(--atrament);
+  stroke-width: .7;
+  stroke-linecap: round;
+  opacity: .5;
+}
+
+#szkic.leci #machina { transform: translateY(-22px); }
+
+@media (prefers-reduced-motion: no-preference) {
+  #machina { transition: transform .5s ease; }
+
+  #szkic.leci #machina { animation: unoszenie 2.6s ease-in-out infinite; }
+
+  @keyframes unoszenie {
+    0%, 100% { transform: translateY(-22px); }
+    50% { transform: translateY(-28px); }
+  }
+}
+
+.notatka {
+  margin: 0 0 1rem;
+  font-family: 'Segoe Print', 'Bradley Hand', cursive;
+  font-size: .85rem;
+  color: var(--atrament-mgla);
+  text-align: right;
+  transform: scaleX(-1);
+}
+
+form { display: grid; gap: .75rem; }
+
+label { color: var(--atrament); }
+
+input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 1.15rem;
+  padding: .8rem .95rem;
+  border: 1px solid var(--kreska);
+  border-radius: 8px;
+  background: var(--papier-jasny);
+  color: var(--atrament);
+}
+
+input:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--kreska);
+  outline-offset: 2px;
+}
+
+input::placeholder {
+  color: var(--atrament-mgla);
+  opacity: 1;
+}
+
+button {
+  font-family: inherit;
+  font-size: 1.1rem;
+  min-height: 2.9rem;
+  border: 1px solid var(--atrament);
+  border-radius: 8px;
+  background: var(--atrament);
+  color: var(--papier);
+  cursor: pointer;
+}
+
+button:hover { background: var(--atrament-mgla); }
+
+#wynik {
+  display: block;
+  min-height: 2.75rem;
+  margin: 1rem 0;
+  padding: .85rem 1rem;
+  border: 1px solid var(--kreska);
+  border-radius: 8px;
+  background: var(--papier-jasny);
+  overflow-wrap: anywhere;
+}
+
+#wynik p { margin: 0; }
+
+#wynik.blad #werdykt { color: var(--atrament-mgla); }
+
+#werdykt {
+  font-family: 'Segoe Print', 'Bradley Hand', cursive;
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.zalozenia {
+  margin: 1rem 0 0;
+  font-size: .75rem;
+  color: var(--atrament-mgla);
+  line-height: 1.45;
+  border-top: 1px solid var(--kreska);
+  padding-top: .75rem;
+}
+
+@media (max-width: 420px) {
+  body { padding: .75rem; }
+  h1 { font-size: 1.6rem; }
+  input { font-size: 1.05rem; padding: .7rem .85rem; }
+  button { min-height: 2.75rem; font-size: 1.05rem; }
+}
