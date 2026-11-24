@@ -6,7 +6,7 @@ Plan: [docs/plany/kopernik.md](../plany/kopernik.md). Zadanie HQ: FOC-1828. PR: 
 
 | # | Kryterium | Ocena (1 do 5) | Uwagi |
 |---|-----------|-----------|-------|
-| K1 | Wybór planety i daty | | |
+| K1 | Wybór planety i daty | | Zmiana planety nie przelicza wyniku; przycisk „Policz” po zmianie planety też nie przelicza (odtworzone przez lidera: Jowisz, wynik zostaje dla Merkurego). Trzeba zmienić liczbę w dacie, żeby przeliczył. |
 | K2 | Długość ekliptyczna i znak zodiaku | | |
 | K3 | Odległość w j.a. i km | | |
 | K4 | Czas biegu światła | | |
@@ -14,8 +14,8 @@ Plan: [docs/plany/kopernik.md](../plany/kopernik.md). Zadanie HQ: FOC-1828. PR: 
 | K6 | Model kołowy i różnica | | |
 | K7 | Kalendarz juliański i gregoriański | | |
 | K8 | Komunikaty dla złych dat | | |
-| K9 | Wygląd, język, brak sieci | | |
-| | **Wrażenie ogólne** | | |
+| K9 | Wygląd, język, brak sieci | | Teksty średnio opisowe, brak pomocy (objaśnień pojęć i wyników). |
+| | **Wrażenie ogólne** | **5/10** | „Nie do końca rozumiem ten kalkulator.” Ocena właściciela 24.11 po obejrzeniu podglądu. |
 
 ## Przebieg (uzupełnia lider)
 
@@ -32,3 +32,8 @@ Plan: [docs/plany/kopernik.md](../plany/kopernik.md). Zadanie HQ: FOC-1828. PR: 
   - FOC-1743: bramka dziecka przed testem przechodziła, bo dziecko nie ma `LA_TASK_KEY`; naprawione w fenix-agents PR 69 (scalone, jeszcze nie na mamut).
   - FOC-1865: zgoda na bramce dziecka nie uruchamia automatycznej publikacji; Supervisor pcha ręcznie i staje na oknie zgody. Także „Waker not running”.
   - Host sesji chwilami nie odpowiada („host-unreachable” w kokpicie).
+
+## Wnioski po ocenie (lider)
+
+- Obliczenia przeszły niezależne przeliczenie testera, ale strona ma błąd obsługi, którego test nie złapał: tester sprawdzał tylko moduł `calc.js`, nigdy strony w przeglądarce.
+- Plan nie miał kryteriów zrozumiałości (objaśnienia, pomoc przy wynikach). Kolejne plany dostają takie kryterium jawnie.
