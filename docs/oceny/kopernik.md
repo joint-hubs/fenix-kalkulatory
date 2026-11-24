@@ -1,6 +1,6 @@
 # Ocena: kalkulator Kopernika
 
-Plan: [docs/plany/kopernik.md](../plany/kopernik.md). Zadanie HQ: (uzupełnia lider). PR i podgląd: (uzupełnia lider).
+Plan: [docs/plany/kopernik.md](../plany/kopernik.md). Zadanie HQ: FOC-1828. PR i podgląd: (uzupełnia lider).
 
 ## Ocena właściciela
 
