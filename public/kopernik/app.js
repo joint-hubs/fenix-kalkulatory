@@ -89,3 +89,19 @@ export function initKopernik(elements) {
 
   return { licz };
 }
+
+// Browser boot: a module script runs after the document is parsed, so the
+// page's elements exist by the time this module evaluates. Importing the
+// module is therefore enough to get a working page. The guard keeps plain
+// imports outside the browser (the tests drive initKopernik with their own
+// element stubs) from touching a document that is not there.
+if (typeof document !== "undefined") {
+  initKopernik({
+    planeta: document.getElementById("planeta"),
+    dzien: document.getElementById("dzien"),
+    miesiac: document.getElementById("miesiac"),
+    rok: document.getElementById("rok"),
+    wynik: document.getElementById("wynik"),
+    form: document.getElementById("pytanie"),
+  });
+}
