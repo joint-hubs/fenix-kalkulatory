@@ -61,3 +61,8 @@ export function formatNumber(value) {
   const rounded = Math.round(value * 1e10) / 1e10;
   return String(rounded).replace(".", ",");
 }
+
+// Backspace: drops the last character; an empty expression stays empty.
+export function removeLast(text) {
+  return String(text ?? "").slice(0, -1);
+}
