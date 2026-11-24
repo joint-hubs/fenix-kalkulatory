@@ -37,3 +37,11 @@ Plan: [docs/plany/kopernik.md](../plany/kopernik.md). Zadanie HQ: FOC-1828. PR: 
 
 - Obliczenia przeszły niezależne przeliczenie testera, ale strona ma błąd obsługi, którego test nie złapał: tester sprawdzał tylko moduł `calc.js`, nigdy strony w przeglądarce.
 - Plan nie miał kryteriów zrozumiałości (objaśnienia, pomoc przy wynikach). Kolejne plany dostają takie kryterium jawnie.
+
+## Runda 2 (po recenzji, 24.11 wieczorem)
+
+- Nowe kryteria K10 (przeliczanie), K11 (objaśnienia dla laika), K12 (testy strony) w HQ.
+- Przebieg: dev-1 po wznowieniu zapętlił się na bramkach wypchnięcia starego commitu 88d3fc8 (gate-dev-1-3, -4, -5, wszystkie odrzucone przez lidera); na decyzję lidera Supervisor zatrzymał dev-1 i uruchomił dev-3. dev-3: commit e17b691 (osobny `app.js`, objaśnienia, testy przez symulowany DOM), test-4: pass, `npm test` 121/121. Publikacja otworzyła NOWY PR 9 (gałąź dev-3), a nie zaktualizowała PR 8, choć Supervisor zapowiadał aktualizację PR 8.
+- Sprawdzenie lidera w prawdziwej przeglądarce (podgląd): strona nie działa. `index.html` ładuje `app.js`, ale `initKopernik` nigdzie nie jest wywoływane: pusta lista planet, brak wyniku. Testy i tester wołały `initKopernik` same, przez symulowany DOM, więc przeszły. K12 („sprawdza stronę w przeglądarce albo równoważnie”) nie zostało spełnione.
+- Interwencje lidera w rundzie 2: odrzucenie trzech bramek zapętlonego dev-1 (4), decyzja „zatrzymaj dev-1 i uruchom świeże dev” na pytanie Supervisora (5), wysłanie tej decyzji przez API hosta, bo kokpit gubił wiadomości do zajętego Supervisora (część 5).
+- Koszt rundy 2: do uzupełnienia z kokpitu.
