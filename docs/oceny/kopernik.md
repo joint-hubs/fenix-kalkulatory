@@ -4,7 +4,7 @@ Plan: [docs/plany/kopernik.md](../plany/kopernik.md). Zadanie HQ: (uzupełnia li
 
 ## Ocena właściciela
 
-| # | Kryterium | Ocena 1–5 | Uwagi |
+| # | Kryterium | Ocena (1 do 5) | Uwagi |
 |---|-----------|-----------|-------|
 | K1 | Wybór planety i daty | | |
 | K2 | Długość ekliptyczna i znak zodiaku | | |

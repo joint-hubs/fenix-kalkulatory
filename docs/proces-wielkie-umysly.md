@@ -12,7 +12,7 @@ Każda runda sprawdza, jak Fenix samodzielnie dowozi małą, ale nietrywialną a
    - Każda interwencja lidera trafia do dziennika w karcie oceny.
    - Błędy samego Fenixa, które wyjdą po drodze, lider naprawia osobno w fenix-agents i też je zapisuje.
 5. **Podgląd.** Przed scaleniem lider wystawia PR na kanał podglądowy Firebase (`firebase hosting:channel:deploy <slug>`) i podaje właścicielowi link.
-6. **Ocena.** Właściciel testuje podgląd względem planu i wypełnia `docs/oceny/<slug>.md`. Każde kryterium ocenia w skali 1–5, do tego wrażenie ogólne. Wynik trafia też jako komentarz do zadania w HQ.
+6. **Ocena.** Właściciel testuje podgląd względem planu i wypełnia `docs/oceny/<slug>.md`. Każde kryterium ocenia w skali od 1 do 5, do tego wrażenie ogólne. Wynik trafia też jako komentarz do zadania w HQ.
 7. **Scalenie.** Po ocenie, na słowo właściciela. Wdrożenie na fenix-kalkulatory.web.app jest osobnym krokiem.
 
 ## Skala ocen
