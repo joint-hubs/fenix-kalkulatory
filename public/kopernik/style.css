@@ -122,6 +122,29 @@ button:hover {
   font-weight: bold;
 }
 
+#wynik .wyjasnienie {
+  font-size: 0.85rem;
+  color: var(--przygaszony);
+  margin: 0.5rem 0 0;
+}
+
+#wynik .objasnienia {
+  font-size: 0.85rem;
+  color: var(--przygaszony);
+  margin: 0.5rem 0 0;
+}
+
+#wynik .objasnienia summary {
+  cursor: pointer;
+  color: var(--atrament);
+  font-weight: bold;
+}
+
+#wynik .objasnienia p {
+  margin: 0.4rem 0 0;
+  font-weight: normal;
+}
+
 figure {
   margin: 0 0 1.5rem;
 }

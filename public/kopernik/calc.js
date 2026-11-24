@@ -22,6 +22,8 @@ export const RANGE_MESSAGE =
 export const MISSING_DATE_MESSAGE = "Podaj pełną datę: dzień, miesiąc i rok.";
 export const NONEXISTENT_DATE_MESSAGE =
   "Takiego dnia nie ma: w 1582 roku, gdy jednocześnie wprowadzono kalendarz gregoriański, dni od 5 do 14 października pominięto.";
+export const INVALID_DATE_MESSAGE =
+  "Takiego dnia nie ma w kalendarzu. Sprawdź dzień i miesiąc: miesiące mają od 28 do 31 dni.";
 
 // Planets the calculator offers, in Copernicus's order of distance from the Sun.
 export const PLANETS = [
@@ -336,7 +338,12 @@ export function resultFor(planetId, day, month, year) {
   }
   const jd = julianDay(year, month, day);
   if (jd === null) {
-    throw new TypeError(NONEXISTENT_DATE_MESSAGE);
+    // Only the skipped days of October 1582 deserve the calendar-reform talk;
+    // a nonsense day like 32 March gets a plain message instead (K11).
+    if (year === 1582 && month === 10 && day >= 5 && day <= 14) {
+      throw new TypeError(NONEXISTENT_DATE_MESSAGE);
+    }
+    throw new TypeError(INVALID_DATE_MESSAGE);
   }
   const jdNoon = jd + 0.5; // julianDay returns 00:00 UT, so noon is half a day later
   const picture = positionFor(planet.key, jdNoon);

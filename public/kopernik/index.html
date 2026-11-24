@@ -12,10 +12,11 @@
       <h1>Kopernik: gdzie jest planeta?</h1>
       <p class="podtytul">Zgłasza: Kopernik (1473-1543)</p>
       <p class="wstep">
-        Włam się na wykład, na którym sam dawno nie byłem. Podaj mi planetę i datę,
-        a ja ułożę jej orbitę dokola Słońca, rozwiążę równanie Keplera i wrócę
-        ci z odpowiedzią: pod jakim znakiem zodiaku ją zobaczysz, jak daleko stoi
-        i czy idzie do przodu, czy się cofa.
+        Podaj mi planetę i datę, a ja policzę, gdzie wtedy była na niebie:
+        pod jakim znakiem zodiaku stała, jak daleko od Ziemi była i czy idzie
+        po niebie do przodu, czy się cofa. Wybierz planetę z listy, wpisz dzień,
+        miesiąc i rok, a wynik przeliczy się sam przy każdej zmianie. Przycisk
+        „Policz" powtarza obliczenie dla danych, które widzisz na ekranie.
       </p>
     </header>
 
@@ -61,50 +62,6 @@
     </footer>
   </main>
 
-  <script type="module">
-    import { resultFor, PLANETS, formatNumber } from "./calc.js";
-
-    const planetaEl = document.getElementById("planeta");
-    const dzienEl = document.getElementById("dzien");
-    const miesiacEl = document.getElementById("miesiac");
-    const rokEl = document.getElementById("rok");
-    const wynikEl = document.getElementById("wynik");
-
-    for (const planeta of PLANETS) {
-      const opcja = document.createElement("option");
-      opcja.value = planeta.id;
-      opcja.textContent = planeta.name;
-      planetaEl.appendChild(opcja);
-    }
-
-    function licz() {
-      try {
-        const wynik = resultFor(planetaEl.value, dzienEl.valueAsNumber, miesiacEl.valueAsNumber, rokEl.valueAsNumber);
-        wynikEl.classList.remove("blad");
-        wynikEl.innerHTML = `
-          <p class="data">${wynik.dateText}</p>
-          <dl>
-            <dt>Znak zodiaku</dt><dd>${wynik.zodiac}</dd>
-            <dt>Ekliptyczna długość</dt><dd>${wynik.longitudeText}</dd>
-            <dt>Odległość</dt><dd>${formatNumber(wynik.distanceAu)} au, czyli ${wynik.distanceText}</dd>
-            <dt>Czas światła</dt><dd>${wynik.lightTimeText}</dd>
-            <dt>Ruch wsteczny</dt><dd>${wynik.retrogradeText}</dd>
-            <dt>Model Koła (K6)</dt><dd>długość ${wynik.modelLongitudeText}, odległość ${wynik.modelDistanceText}</dd>
-            <dt>Kalendarz</dt><dd>${wynik.calendarNote}</dd>
-          </dl>
-        `;
-      } catch (err) {
-        wynikEl.classList.add("blad");
-        wynikEl.innerHTML = `<p class="blad">${err.message}</p>`;
-      }
-    }
-
-    for (const el of [dzienEl, miesiacEl, rokEl]) el.addEventListener("input", licz);
-    document.getElementById("pytanie").addEventListener("submit", (e) => {
-      e.preventDefault();
-      licz();
-    });
-    licz();
-  </script>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>

@@ -8,6 +8,7 @@ import {
   precession,
   normalize360,
 } from "../public/kopernik/calc.js";
+import { initKopernik } from "../public/kopernik/app.js";
 
 function near(actual, expected, tolerance, message) {
   assert.ok(
@@ -199,5 +200,196 @@ describe("K8: precesja", () => {
     for (const v of [normalize360(-10), normalize360(370), normalize360(0)]) {
       assert.ok(v >= 0 && v < 360);
     }
+  });
+});
+
+// --- Gotowe, gdy: K10 każda zmiana danych (planeta, dzień, miesiąc, rok) i przycisk „Policz" zawsze dają wynik dla aktualnych danych. ---
+// --- Gotowe, gdy: K12 testy sprawdzają stronę: testy prowadzą dokładnie ten kod, który uruchamia przeglądarka (moduł app.js, nie kopia). ---
+
+// Minimalna atrapa elementu DOM o interfejsie, którego używa app.js: wartości,
+// valueAsNumber jak w przeglądarce, zbieranie listenerów i klas, dispatchEvent.
+function stubElement(tag) {
+  return {
+    tagName: tag,
+    children: [],
+    listeners: {},
+    value: "",
+    textContent: "",
+    innerHTML: "",
+    classList: {
+      classes: new Set(),
+      add(name) { this.classes.add(name); },
+      remove(name) { this.classes.delete(name); },
+      contains(name) { return this.classes.has(name); },
+    },
+    appendChild(child) {
+      this.children.push(child);
+      if (tag === "select" && this.value === "") this.value = child.value;
+    },
+    addEventListener(type, fn) { (this.listeners[type] ||= []).push(fn); },
+    dispatch(type, event = { preventDefault() {} }) {
+      for (const fn of this.listeners[type] || []) fn(event);
+    },
+    get valueAsNumber() {
+      if (this.value === "" || this.value == null) return NaN;
+      return Number(this.value);
+    },
+  };
+}
+
+// Buduje stronę dokładnie tak, jak robi to przeglądarka: initKopernik wypełnia
+// listę planet, podpina listeners i liczy wynik startowy dla danych z pól.
+function buildPage() {
+  const planeta = stubElement("select");
+  const dzien = stubElement("input");
+  const miesiac = stubElement("input");
+  const rok = stubElement("input");
+  const wynik = stubElement("section");
+  const form = stubElement("form");
+  dzien.value = "27";
+  miesiac.value = "8";
+  rok.value = "2003";
+  initKopernik({ planeta, dzien, miesiac, rok, wynik, form, createElement: (tag) => stubElement(tag) });
+  return { planeta, dzien, miesiac, rok, wynik, form };
+}
+
+describe("K10/K12: strona przelicza wynik dla aktualnych danych", () => {
+  it("start: app.js wypełnia listę planet i liczy wynik dla pól startowych", () => {
+    const page = buildPage();
+    assert.equal(page.planeta.children.length, 5);
+    assert.equal(page.planeta.value, "merkury");
+    assert.match(page.wynik.innerHTML, /Merkury/);
+    assert.match(page.wynik.innerHTML, /27 sierpnia 2003 roku/);
+  });
+
+  it("zmiana planety od razu przelicza wynik (test, który dziś by nie przeszedł)", () => {
+    const page = buildPage();
+    page.planeta.value = "jowisz";
+    page.planeta.dispatch("change");
+    assert.match(page.wynik.innerHTML, /Jowisz/);
+    assert.doesNotMatch(page.wynik.innerHTML, /Merkury/);
+  });
+
+  it("Policz po wyborze innej planety daje wynik tej planety (odtworzenie zgłoszenia właściciela)", () => {
+    const page = buildPage();
+    page.planeta.value = "jowisz";
+    page.form.dispatch("submit");
+    assert.match(page.wynik.innerHTML, /Jowisz/);
+    assert.doesNotMatch(page.wynik.innerHTML, /Merkury/);
+  });
+
+  it("zmiana dnia, miesiąca i roku przelicza wynik przy następnych danych", () => {
+    const page = buildPage();
+    page.planeta.value = "saturn";
+    page.planeta.dispatch("change");
+    page.dzien.value = "24";
+    page.dzien.dispatch("input");
+    page.miesiac.value = "5";
+    page.miesiac.dispatch("input");
+    page.rok.value = "1543";
+    page.rok.dispatch("input");
+    assert.match(page.wynik.innerHTML, /24 maja 1543 roku/);
+    assert.match(page.wynik.innerHTML, /juliański/);
+  });
+
+  it("wynik zawsze pokazuje nazwę planety, dla której został policzony", () => {
+    const page = buildPage();
+    for (const [id, name] of [["wenus", "Wenus"], ["saturn", "Saturn"]]) {
+      page.planeta.value = id;
+      page.planeta.dispatch("change");
+      assert.match(page.wynik.innerHTML, new RegExp(`Wynik dla planety ${name}`));
+    }
+  });
+
+  it("błędna data pokazuje komunikat i klasę blad, poprawna data ją zdejmuje", () => {
+    const page = buildPage();
+    page.dzien.value = "31";
+    page.dzien.dispatch("input");
+    page.miesiac.value = "2";
+    page.miesiac.dispatch("input");
+    assert.equal(page.wynik.classList.contains("blad"), true);
+    page.miesiac.value = "3";
+    page.miesiac.dispatch("input");
+    assert.equal(page.wynik.classList.contains("blad"), false);
+  });
+});
+
+// --- Gotowe, gdy: K11 kalkulator zrozumiały dla laika: prosty wstęp, objaśnienie przy każdym wyniku, jedno zdanie o różnicy modeli. ---
+describe("K11: objaśnienia dla laika", () => {
+  const appJs = readFileSync(
+    new URL("../public/kopernik/app.js", import.meta.url),
+    "utf8"
+  );
+
+  it("wynik pokazuje krótkie objaśnienie przy każdej etykiecie", () => {
+    const page = buildPage();
+    const etykiety = [
+      "Znak zodiaku",
+      "Ekliptyczna długość",
+      "Odległość",
+      "Czas światła",
+      "Ruch wsteczny",
+      "Model kół Kopernika",
+      "Kalendarz",
+    ];
+    for (const etykieta of etykiety) {
+      const wzor = new RegExp(`<dt title="[^"]*">${etykieta}</dt>`);
+      assert.match(page.wynik.innerHTML, wzor, `objaśnienie przy etykiecie: ${etykieta}`);
+    }
+  });
+
+  it("sekcja Co znaczą te wyniki? wyjaśnia każdy wynik po polsku", () => {
+    const page = buildPage();
+    assert.match(page.wynik.innerHTML, /Co znaczą te wyniki\?/);
+    for (const slowo of ["zodiaku", "odległość", "światło", "cofa", "kołach", "kalendarz"]) {
+      assert.match(page.wynik.innerHTML, new RegExp(slowo, "i"));
+    }
+  });
+
+  it("przy modelu kół jest jedno zdanie, co oznacza różnica", () => {
+    const page = buildPage();
+    assert.match(page.wynik.innerHTML, /Różnica pokazuje, o ile/);
+    assert.match(page.wynik.innerHTML, /kołach Kopernika/);
+  });
+
+  it("wstęp na stronie mówi prosto, co liczy i jak go użyć", () => {
+    const copy = pageHtml.replace(/<[^>]+>/g, " ");
+    assert.match(copy, /Wybierz planetę z listy/);
+    assert.match(copy, /wynik przeliczy się sam/);
+  });
+
+  it("kopie strony i modułu są na ty i bez półpauz", () => {
+    for (const zrodlo of [pageHtml, appJs]) {
+      const copy = zrodlo.replace(/<[^>]+>/g, " ");
+      assert.doesNotMatch(copy, /[–—]/);
+    }
+    assert.match(pageHtml, /Podaj mi planetę/);
+  });
+});
+
+// --- Gotowe, gdy: K11 komunikat o błędzie pasuje do tego, co wpisano (nie każdy błąd to wykład o 1582 roku). ---
+describe("K11: komunikaty o złych datach", () => {
+  it("nieistniejący dzień, np. 32 marca 2003, nie dostaje wykładu o 1582 roku", () => {
+    assert.throws(
+      () => resultFor("mars", 32, 3, 2003),
+      (err) =>
+        err instanceof TypeError &&
+        /nie ma/.test(err.message) &&
+        !/1582/.test(err.message)
+    );
+  });
+
+  it("dni 5 do 14 października 1582 dostają wyjaśnienie reformy kalendarza", () => {
+    assert.throws(
+      () => resultFor("mars", 10, 10, 1582),
+      (err) => err instanceof TypeError && /pominięto/.test(err.message)
+    );
+  });
+
+  it("zły miesiąc też dostaje komunikat o nieistniejącym dniu", () => {
+    assert.throws(
+      () => resultFor("mars", 1, 13, 2003),
+      (err) => err instanceof TypeError && /nie ma/.test(err.message)
+    );
   });
 });
