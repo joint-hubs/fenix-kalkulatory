@@ -31,13 +31,14 @@
         <button type="button" data-wstaw=",">,</button>
         <button type="button" data-wstaw="+">+</button>
         <button type="submit" id="policz">=</button>
+        <button type="button" id="cofnij" aria-label="Usuń ostatni znak">⌫</button>
         <button type="button" id="wyczysc">Wyczyść</button>
       </div>
       <output id="wynik" for="wyrazenie" aria-live="polite"></output>
     </form>
   </main>
   <script type="module">
-    import { evaluate, formatNumber } from "./calc.js";
+    import { evaluate, formatNumber, removeLast } from "./calc.js";
 
     const form = document.querySelector("#kalkulator");
     const wyrazenie = document.querySelector("#wyrazenie");
@@ -65,6 +66,11 @@
         wyrazenie.focus();
       });
     }
+
+    document.querySelector("#cofnij").addEventListener("click", () => {
+      wyrazenie.value = removeLast(wyrazenie.value);
+      wyrazenie.focus();
+    });
 
     document.querySelector("#wyczysc").addEventListener("click", () => {
       wyrazenie.value = "";

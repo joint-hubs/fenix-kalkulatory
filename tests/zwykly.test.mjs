@@ -8,6 +8,7 @@ import {
   multiply,
   divide,
   formatNumber,
+  removeLast,
   DIVIDE_BY_ZERO_MESSAGE,
 } from "../public/zwykly/calc.js";
 
@@ -83,14 +84,41 @@ test("przyciski wstawiają cyfry i działania do pola", () => {
   }
 });
 
-test("przycisk Wyczyść ma dokładnie szerokość siatki klawiszy", () => {
+test("przyciski ⌫ i Wyczyść razem wypełniają ostatni wiersz siatki", () => {
   // Regresja: Wyczyść siedział w osobnym wierszu (1fr auto) i jego prawa
-  // krawędź kończyła się przed kolumną = i ÷. Teraz jest w tej samej siatce,
-  // rozpięty na wszystkie kolumny, więc szerokość ma z definicji.
+  // krawędź kończyła się przed kolumną = i ÷. Teraz ⌫ i Wyczyść dzielą
+  // ostatni wiersz: ⌫ na pierwszej kolumnie, Wyczyść od drugiej kolumny
+  // do prawej krawędzi siatki, więc prawa krawędź Wyczyść wciąż sięga
+  // końca siatki.
   const klawisze = pageHtml.match(/<div class="klawisze">([\s\S]*?)<\/div>/);
   assert.ok(klawisze, "siatka klawiszy istnieje");
-  assert.match(klawisze[1], /id="wyczysc"/, "Wyczyść jest w tej samej siatce co klawisze");
-  assert.match(pageCss, /#wyczysc[^}]*grid-column:\s*1\s*\/\s*-1/, "Wyczyść rozpięty na całą szerokość siatki");
+  const cofnij = klawisze[1].indexOf('id="cofnij"');
+  const wyczysc = klawisze[1].indexOf('id="wyczysc"');
+  assert.ok(cofnij > -1, "przycisk ⌫ jest w tej samej siatce co klawisze");
+  assert.ok(cofnij < wyczysc, "⌫ stoi tuż przed Wyczyść");
+  assert.match(pageCss, /#wyczysc[^}]*grid-column:\s*2\s*\/\s*-1/, "Wyczyść rozpięty od drugiej kolumny do prawej krawędzi siatki");
+});
+
+// --- Gotowe, gdy: przyciskiem ⌫ usuwam ostatni znak ---
+
+test("⌫ usuwa ostatni znak z działania", () => {
+  assert.equal(removeLast("12 + 3"), "12 + ");
+  assert.equal(removeLast("12 + 34"), "12 + 3");
+  assert.equal(removeLast("5"), "");
+});
+
+test("⌫ przy pustym polu nic nie zmienia i nie rzuca błędu", () => {
+  assert.equal(removeLast(""), "");
+  assert.doesNotThrow(() => removeLast(""));
+});
+
+test("przycisk ⌫ jest obok Wyczyść i woła removeLast z calc.js", () => {
+  const klawisze = pageHtml.match(/<div class="klawisze">([\s\S]*?)<\/div>/);
+  assert.ok(klawisze, "siatka klawiszy istnieje");
+  assert.match(klawisze[1], /⌫/, "przycisk ⌫ jest podpisany symbolem");
+  assert.doesNotMatch(pageHtml, /id="cofnij"[^>]*\bdisabled\b/i, "⌫ musi być aktywny");
+  assert.match(pageHtml, /import\s*\{[^}]*removeLast[^}]*\}\s*from\s*"\.\/calc\.js"/, "strona importuje removeLast z calc.js");
+  assert.match(pageHtml, /removeLast\(\s*wyrazenie\.value\s*\)/, "klik ⌫ usuwa ostatni znak pola Działanie");
 });
 
 // --- Gotowe, gdy: wygląda dobrze na telefonie ---

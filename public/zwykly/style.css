@@ -70,7 +70,7 @@ button:hover, button:focus-visible {
 #policz:hover, #policz:focus-visible { background: #b98fd2; }
 
 #wyczysc {
-  grid-column: 1 / -1;
+  grid-column: 2 / -1;
 }
 
 #wynik {
