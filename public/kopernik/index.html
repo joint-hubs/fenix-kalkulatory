@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kopernik: gdzie jest planeta?</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Kopernik: gdzie jest planeta?</h1>
+      <p class="podtytul">Zgłasza: Kopernik (1473-1543)</p>
+      <p class="wstep">
+        Włam się na wykład, na którym sam dawno nie byłem. Podaj mi planetę i datę,
+        a ja ułożę jej orbitę dokola Słońca, rozwiążę równanie Keplera i wrócę
+        ci z odpowiedzią: pod jakim znakiem zodiaku ją zobaczysz, jak daleko stoi
+        i czy idzie do przodu, czy się cofa.
+      </p>
+    </header>
+
+    <form id="pytanie">
+      <div class="pole">
+        <label for="planeta">Planeta</label>
+        <select id="planeta"></select>
+      </div>
+      <div class="pole">
+        <label for="dzien">Dzień</label>
+        <input type="number" id="dzien" inputmode="numeric" min="1" max="31" value="27">
+      </div>
+      <div class="pole">
+        <label for="miesiac">Miesiąc</label>
+        <input type="number" id="miesiac" inputmode="numeric" min="1" max="12" value="8">
+      </div>
+      <div class="pole">
+        <label for="rok">Rok (1500 do 2100)</label>
+        <input type="number" id="rok" inputmode="numeric" min="1500" max="2100" value="2003">
+      </div>
+      <button type="submit">Policz</button>
+    </form>
+
+    <section id="wynik" aria-live="polite"></section>
+
+    <figure>
+      <svg id="orbita" viewBox="0 0 320 320" role="img" aria-label="Szkic orbit dookoła Słońca">
+        <circle cx="160" cy="160" r="130" class="kolo"></circle>
+        <circle cx="160" cy="160" r="7" class="slonce"></circle>
+        <text x="160" y="185" text-anchor="middle" class="napis">Słońce</text>
+      </svg>
+      <figcaption class="legenda">Orbita planety na tle koła, jak w tablicy Kopernika.</figcaption>
+    </figure>
+
+    <p class="zalozenia">
+      Liczę po tablicach elementów orbit JPL (epoka J2000), z poprawką precesji
+      p(T) = 1.397*T + 0.00031*T*T stopnia. Kalendarz: juliański przed 15.10.1582,
+      gregoriański od tego dnia. Granica lat: 1500 do 2100.
+    </p>
+
+    <footer>
+      <p>Zbudował Fenix, zespół agentów AI Jointhubs.</p>
+    </footer>
+  </main>
+
+  <script type="module">
+    import { resultFor, PLANETS, formatNumber } from "./calc.js";
+
+    const planetaEl = document.getElementById("planeta");
+    const dzienEl = document.getElementById("dzien");
+    const miesiacEl = document.getElementById("miesiac");
+    const rokEl = document.getElementById("rok");
+    const wynikEl = document.getElementById("wynik");
+
+    for (const planeta of PLANETS) {
+      const opcja = document.createElement("option");
+      opcja.value = planeta.id;
+      opcja.textContent = planeta.name;
+      planetaEl.appendChild(opcja);
+    }
+
+    function licz() {
+      try {
+        const wynik = resultFor(planetaEl.value, dzienEl.valueAsNumber, miesiacEl.valueAsNumber, rokEl.valueAsNumber);
+        wynikEl.classList.remove("blad");
+        wynikEl.innerHTML = `
+          <p class="data">${wynik.dateText}</p>
+          <dl>
+            <dt>Znak zodiaku</dt><dd>${wynik.zodiac}</dd>
+            <dt>Ekliptyczna długość</dt><dd>${wynik.longitudeText}</dd>
+            <dt>Odległość</dt><dd>${formatNumber(wynik.distanceAu)} au, czyli ${wynik.distanceText}</dd>
+            <dt>Czas światła</dt><dd>${wynik.lightTimeText}</dd>
+            <dt>Ruch wsteczny</dt><dd>${wynik.retrogradeText}</dd>
+            <dt>Model Koła (K6)</dt><dd>długość ${wynik.modelLongitudeText}, odległość ${wynik.modelDistanceText}</dd>
+            <dt>Kalendarz</dt><dd>${wynik.calendarNote}</dd>
+          </dl>
+        `;
+      } catch (err) {
+        wynikEl.classList.add("blad");
+        wynikEl.innerHTML = `<p class="blad">${err.message}</p>`;
+      }
+    }
+
+    for (const el of [dzienEl, miesiacEl, rokEl]) el.addEventListener("input", licz);
+    document.getElementById("pytanie").addEventListener("submit", (e) => {
+      e.preventDefault();
+      licz();
+    });
+    licz();
+  </script>
+</body>
+</html>

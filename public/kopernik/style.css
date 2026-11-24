@@ -1,0 +1,199 @@
+:root {
+  --papier: #f5efe0;
+  --atrament: #26251f;
+  --przygaszony: #6b6656;
+  --akcent: #8a2f1d;
+  --linia: #d8cfb8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--papier);
+  color: var(--atrament);
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.55;
+}
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+h1 {
+  font-size: 1.6rem;
+  line-height: 1.2;
+  margin: 0 0 0.25rem;
+}
+
+.podtytul {
+  color: var(--przygaszony);
+  font-style: italic;
+  margin: 0 0 1rem;
+}
+
+.wstep {
+  margin: 0 0 1.5rem;
+}
+
+form {
+  border: 1px solid var(--linia);
+  border-radius: 6px;
+  padding: 1rem;
+  margin: 0 0 1.5rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.pole {
+  display: grid;
+  gap: 0.25rem;
+}
+
+label {
+  font-size: 0.9rem;
+  color: var(--przygaszony);
+}
+
+input,
+select {
+  font: inherit;
+  color: inherit;
+  background: #fffdf6;
+  border: 1px solid var(--linia);
+  border-radius: 4px;
+  padding: 0.45rem 0.6rem;
+  width: 100%;
+}
+
+button {
+  font: inherit;
+  background: var(--akcent);
+  color: var(--papier);
+  border: none;
+  border-radius: 4px;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(1.08);
+}
+
+:focus-visible {
+  outline: 2px solid var(--akcent);
+  outline-offset: 2px;
+}
+
+#wynik {
+  border: 1px solid var(--linia);
+  border-radius: 6px;
+  padding: 1rem;
+  margin: 0 0 1.5rem;
+  overflow-wrap: anywhere;
+}
+
+#wynik.blad {
+  border-color: var(--akcent);
+  color: var(--akcent);
+}
+
+#wynik p {
+  margin: 0 0 0.5rem;
+}
+
+#wynik dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+  margin: 0;
+}
+
+#wynik dt {
+  color: var(--przygaszony);
+}
+
+#wynik dd {
+  margin: 0;
+  font-weight: bold;
+}
+
+figure {
+  margin: 0 0 1.5rem;
+}
+
+svg {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  display: block;
+}
+
+.kolo {
+  fill: none;
+  stroke: var(--przygaszony);
+  stroke-dasharray: 4 4;
+}
+
+.slonce {
+  fill: #d9a441;
+}
+
+.orbita-planety {
+  fill: none;
+  stroke: var(--akcent);
+}
+
+.planeta {
+  fill: var(--akcent);
+}
+
+.ziemia {
+  fill: #3f6d8e;
+}
+
+.napis {
+  font-size: 11px;
+  fill: var(--przygaszony);
+}
+
+.legenda {
+  font-size: 0.85rem;
+  color: var(--przygaszony);
+  margin: 0.25rem 0 0;
+}
+
+.zalozenia {
+  font-size: 0.85rem;
+  color: var(--przygaszony);
+  border-top: 1px solid var(--linia);
+  padding-top: 0.75rem;
+  margin: 0 0 1.5rem;
+}
+
+footer {
+  font-size: 0.85rem;
+  color: var(--przygaszony);
+}
+
+footer p {
+  margin: 0;
+}
+
+@media (max-width: 420px) {
+  main {
+    padding: 1rem 0.75rem 2rem;
+  }
+
+  #wynik dl {
+    grid-template-columns: 1fr;
+  }
+
+  #wynik dd {
+    margin: 0 0 0.5rem;
+  }
+}
