@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kopernik: gdzie jest planeta?</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Kopernik: gdzie jest planeta?</h1>
+      <p class="podtytul">Zgłasza: Kopernik (1473-1543)</p>
+      <p class="wstep">
+        Podaj mi planetę i datę, a ja policzę, gdzie wtedy była na niebie:
+        pod jakim znakiem zodiaku stała, jak daleko od Ziemi była i czy idzie
+        po niebie do przodu, czy się cofa. Wybierz planetę z listy, wpisz dzień,
+        miesiąc i rok, a wynik przeliczy się sam przy każdej zmianie. Przy
+        wyniku znajdziesz rysunek nieba, objaśnienia pojęć i porównanie
+        z obrazem Kopernika.
+      </p>
+    </header>
+
+    <div class="przyklady">
+      <button type="button" id="przyklad-dzis">Dziś</button>
+      <button type="button" id="przyklad-mars">Wielkie zbliżenie Marsa 2003</button>
+      <button type="button" id="przyklad-saturn">Saturn w roku mojej śmierci 1543</button>
+    </div>
+
+    <section id="wynik" aria-live="polite"></section>
+
+    <details id="szczegoly" open>
+      <summary>Dane: planeta i data</summary>
+      <form id="pytanie">
+        <div class="pole">
+          <label for="planeta">Planeta</label>
+          <select id="planeta"></select>
+        </div>
+        <div class="pole">
+          <label for="dzien">Dzień</label>
+          <input type="number" id="dzien" inputmode="numeric" min="1" max="31" value="27">
+          <p class="blad-pola" id="blad-dzien" hidden></p>
+        </div>
+        <div class="pole">
+          <label for="miesiac">Miesiąc</label>
+          <input type="number" id="miesiac" inputmode="numeric" min="1" max="12" value="8">
+          <p class="blad-pola" id="blad-miesiac" hidden></p>
+        </div>
+        <div class="pole">
+          <label for="rok">Rok (1500 do 2100)</label>
+          <input type="number" id="rok" inputmode="numeric" min="1500" max="2100" value="2003">
+          <p class="blad-pola" id="blad-rok" hidden></p>
+        </div>
+        <button type="submit">Policz</button>
+      </form>
+    </details>
+
+    <p class="zalozenia">
+      Liczę po tablicach elementów orbit JPL (epoka J2000), z poprawką precesji
+      p(T) = 1.397*T + 0.00031*T*T stopnia. Kalendarz: juliański przed 15.10.1582,
+      gregoriański od tego dnia. Granica lat: 1500 do 2100.
+    </p>
+
+    <footer>
+      <p>Zbudował Fenix, zespół agentów AI Jointhubs.</p>
+    </footer>
+  </main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
