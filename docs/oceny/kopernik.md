@@ -1,6 +1,6 @@
 # Ocena: kalkulator Kopernika
 
-Plan: [docs/plany/kopernik.md](../plany/kopernik.md). Zadanie HQ: FOC-1828. PR: joint-hubs/fenix-kalkulatory#8 (commit 88d3fc84). Podgląd: https://fenix-kalkulatory--kopernik-pngktjr5.web.app/kopernik/ (ważny do 8.12.2026).
+Plan: [docs/plany/kopernik.md](../plany/kopernik.md). Zadanie HQ: FOC-1828. PR: joint-hubs/fenix-kalkulatory#9 (commit 40e7ae0; runda 1 była w PR 8, commit 88d3fc84). Podgląd: https://fenix-kalkulatory--kopernik-pngktjr5.web.app/kopernik/ (ważny do 9.12.2026).
 
 ## Ocena właściciela
 
@@ -45,3 +45,13 @@ Plan: [docs/plany/kopernik.md](../plany/kopernik.md). Zadanie HQ: FOC-1828. PR: 
 - Sprawdzenie lidera w prawdziwej przeglądarce (podgląd): strona nie działa. `index.html` ładuje `app.js`, ale `initKopernik` nigdzie nie jest wywoływane: pusta lista planet, brak wyniku. Testy i tester wołały `initKopernik` same, przez symulowany DOM, więc przeszły. K12 („sprawdza stronę w przeglądarce albo równoważnie”) nie zostało spełnione.
 - Interwencje lidera w rundzie 2: odrzucenie trzech bramek zapętlonego dev-1 (4), decyzja „zatrzymaj dev-1 i uruchom świeże dev” na pytanie Supervisora (5), wysłanie tej decyzji przez API hosta, bo kokpit gubił wiadomości do zajętego Supervisora (część 5).
 - Koszt rundy 2: do uzupełnienia z kokpitu.
+
+## Runda 3 (24.11 wieczorem do 25.11 w nocy)
+
+- Zlecenie: strona ma startować sama, a test K12b ma ładować `index.html` jak przeglądarka, bez ręcznego wołania `initKopernik`.
+- dev-3: commit 40e7ae0 (samodzielny start w `app.js`, test `tests/kopernik.page.test.mjs`). Supervisor przejrzał go i uruchomił testera, ale o 22:32 UTC limit dzienny projektu (10 USD, wydane 10,01) zaparkował sesję przed testem. Komentarz o zatrzymaniu pojawił się w HQ, co potwierdza FOC-1736 na żywo.
+- Właściciel podniósł limit do 15 USD. Starej sesji nie dało się wznowić („generation is over”), więc lider uruchomił nową (sup-52bbca2e) z opisem stanu: commit 40e7ae0, brak testera, publikacja do PR 9.
+- Nowa sesja: test-1 pass na 40e7ae0, `npm test` 122/122. K12b czerwony na rodzicu (lista planet 0 z 5), zielony na kandydacie. Bramka gate-supervisor-1 celowała tym razem w PR 9 (przesunięcie gałęzi do przodu, bez nowego PR). PR 9 wskazuje 40e7ae0.
+- Sprawdzenie lidera w prawdziwej przeglądarce (podgląd, 25.11): strona startuje sama, bez błędów w konsoli. Zmiana planety od razu przelicza wynik (Merkury, Jowisz, Mars). Mars 27.08.2003: 0,37 au, Ryby 335,27°, ruch wsteczny „tak”, zgodnie z wielką opozycją 2003. Data 31.02 daje komunikat „Takiego dnia nie ma w kalendarzu…”.
+- Interwencje lidera w rundzie 3: (6) uruchomienie nowej sesji po zatrzymaniu przez limit, z opisem stanu; (7) zgoda „yes” na bramce gate-supervisor-1.
+- Koszt: runda 3 przekroczyła limit 10 USD na kalkulator. Większość poszła na samego Supervisora (około 6,5 h pracy, wznowienia i streszczenia kontekstu); dzieci kosztowały około 2 USD.
