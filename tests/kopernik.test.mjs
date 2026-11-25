@@ -7,6 +7,8 @@ import {
   calendarName,
   precession,
   normalize360,
+  signPosition,
+  formatMlnKm,
 } from "../public/kopernik/calc.js";
 import { initKopernik } from "../public/kopernik/app.js";
 
@@ -226,6 +228,11 @@ function stubElement(tag) {
       this.children.push(child);
       if (tag === "select" && this.value === "") this.value = child.value;
     },
+    attrs: {},
+    setAttribute(k, v) { this.attrs[k] = String(v); },
+    getAttribute(k) { return this.attrs[k] ?? null; },
+    removeAttribute(k) { delete this.attrs[k]; },
+    hidden: false,
     addEventListener(type, fn) { (this.listeners[type] ||= []).push(fn); },
     dispatch(type, event = { preventDefault() {} }) {
       for (const fn of this.listeners[type] || []) fn(event);
@@ -246,19 +253,29 @@ function buildPage() {
   const rok = stubElement("input");
   const wynik = stubElement("section");
   const form = stubElement("form");
+  const szczegoly = stubElement("details");
+  const bladDzien = stubElement("p");
+  const bladMiesiac = stubElement("p");
+  const bladRok = stubElement("p");
   dzien.value = "27";
   miesiac.value = "8";
   rok.value = "2003";
-  initKopernik({ planeta, dzien, miesiac, rok, wynik, form, createElement: (tag) => stubElement(tag) });
-  return { planeta, dzien, miesiac, rok, wynik, form };
+  initKopernik({
+    planeta, dzien, miesiac, rok, wynik, form, szczegoly,
+    bladDzien, bladMiesiac, bladRok,
+    createElement: (tag) => stubElement(tag),
+  });
+  return { planeta, dzien, miesiac, rok, wynik, form, szczegoly, bladDzien, bladMiesiac, bladRok };
 }
 
 describe("K10/K12: strona przelicza wynik dla aktualnych danych", () => {
   it("start: app.js wypełnia listę planet i liczy wynik dla pól startowych", () => {
     const page = buildPage();
     assert.equal(page.planeta.children.length, 5);
-    assert.equal(page.planeta.value, "merkury");
-    assert.match(page.wynik.innerHTML, /Merkury/);
+    // K18: data startowa to wielkie zbliżenie Marsa 27.08.2003, więc planeta
+    // przy otwarciu strony pasuje do daty, zamiast zostać przy pierwszej.
+    assert.equal(page.planeta.value, "mars");
+    assert.match(page.wynik.innerHTML, /Mars/);
     assert.match(page.wynik.innerHTML, /27 sierpnia 2003 roku/);
   });
 
@@ -391,5 +408,166 @@ describe("K11: komunikaty o złych datach", () => {
       () => resultFor("mars", 1, 13, 2003),
       (err) => err instanceof TypeError && /nie ma/.test(err.message)
     );
+  });
+});
+
+// --- Gotowe, gdy: K14 nad liczbami jest jedno zdanie z wynikiem: planeta, znak, kierunek ruchu. ---
+describe("K14: zdanie z wynikiem nad liczbami", () => {
+  it("Mars 27.08.2003: zdanie zawiera Mars, Ryb i cofa", () => {
+    const page = buildPage();
+    assert.match(page.wynik.innerHTML, /Wynik dla planety Mars/);
+    assert.match(page.wynik.innerHTML, /Mars stoi w Rybach/);
+    assert.match(page.wynik.innerHTML, /cofa się na tle gwiazd/);
+  });
+
+  it("Jowisz 24.11.2026: zdanie mówi o ruchu do przodu", () => {
+    const page = buildPage();
+    page.planeta.value = "jowisz";
+    page.dzien.value = "24";
+    page.miesiac.value = "11";
+    page.rok.value = "2026";
+    page.rok.dispatch("input");
+    assert.match(page.wynik.innerHTML, /Jowisz stoi w Lwie/);
+    assert.match(page.wynik.innerHTML, /idzie po niebie do przodu/);
+  });
+});
+
+// --- Gotowe, gdy: K15 bez fałszywej precyzji: km jako mln km (max 3 cyfry znaczące), położenie w znaku słowami, pełne stopnie tylko jako szczegół. ---
+describe("K15: czytelne liczby", () => {
+  it("odległość Marsa 27.08.2003 jako mln km, bez 7 cyfr z rzędu", () => {
+    const page = buildPage();
+    assert.match(page.wynik.innerHTML, /55,8 mln km/);
+    assert.doesNotMatch(page.wynik.innerHTML, /\d{7}/);
+  });
+
+  it("położenie w znaku słowami, pełne stopnie tylko jako szczegół", () => {
+    const page = buildPage();
+    assert.match(page.wynik.innerHTML, /5° po początku Ryb/);
+    assert.match(page.wynik.innerHTML, /dokładnie 335,27°/);
+    assert.match(page.wynik.innerHTML, /szczegol/);
+  });
+
+  it("formatMlnKm daje najwyżej 3 cyfry znaczące", () => {
+    assert.equal(formatMlnKm(55732590), "55,7 mln km");
+    assert.equal(formatMlnKm(768412345), "768 mln km");
+    assert.equal(formatMlnKm(1356500000), "1,36 mld km");
+  });
+
+  it("signPosition mówi słowami, gdzie w znaku stoi planeta", () => {
+    assert.equal(signPosition(335.27).text, "5° po początku Ryb");
+    assert.equal(signPosition(355.2).text, "5° przed końcem Ryb");
+    assert.equal(signPosition(0.2).text, "dokładnie na początku Barana");
+    assert.equal(signPosition(119.9).text, "dokładnie na końcu Raka");
+  });
+});
+
+// --- Gotowe, gdy: K16 czas światła z porównaniem: światło ze Słońca leci około 8 minut. ---
+describe("K16: czas światła z porównaniem", () => {
+  it("Mars 27.08.2003: czas światła przywołuje 8 minut światła ze Słońca", () => {
+    const page = buildPage();
+    assert.match(page.wynik.innerHTML, /Czas światła/);
+    assert.match(page.wynik.innerHTML, /około 8 minut/);
+  });
+});
+
+// --- Gotowe, gdy: K17 przycisk ? przy pojęciach, obsługiwany klawiaturą i dotykiem, tekst o bieżącej planecie i dacie; nie tylko title. ---
+describe("K17: pomoc pod znakiem zapytania", () => {
+  function fakePomoc(key) {
+    const btn = {
+      attrs: { "data-pomoc": key, "aria-expanded": "false" },
+      closest(sel) { return sel === "[data-pomoc]" ? btn : null; },
+      setAttribute(k, v) { this.attrs[k] = String(v); },
+      getAttribute(k) { return this.attrs[k] ?? null; },
+    };
+    return btn;
+  }
+
+  it("przy j.a., długości ekliptycznej, ruchu wstecznym i kołach Kopernika jest przycisk ?", () => {
+    const page = buildPage();
+    for (const key of ["odleglosc", "dlugosc", "wstecz", "model"]) {
+      assert.match(
+        page.wynik.innerHTML,
+        new RegExp(`data-pomoc="${key}"`),
+        `brak pomocy dla ${key}`
+      );
+    }
+  });
+
+  it("klik na ? pokazuje objaśnienie o bieżącej planecie i dacie, drugi klik chowa", () => {
+    const page = buildPage();
+    page.wynik.dispatch("click", { target: fakePomoc("odleglosc") });
+    assert.match(page.wynik.innerHTML, /data-pomoc="odleglosc"[^>]*aria-expanded="true"/);
+    assert.match(page.wynik.innerHTML, /Mars, 27 sierpnia 2003 roku/);
+    page.wynik.dispatch("click", { target: fakePomoc("odleglosc") });
+    assert.match(page.wynik.innerHTML, /data-pomoc="odleglosc"[^>]*aria-expanded="false"/);
+    assert.match(page.wynik.innerHTML, /id="panel-pomoc" class="panel-pomoc" hidden/);
+  });
+
+  it("klik na inny ? podmienia treść", () => {
+    const page = buildPage();
+    page.wynik.dispatch("click", { target: fakePomoc("odleglosc") });
+    page.wynik.dispatch("click", { target: fakePomoc("model") });
+    assert.match(page.wynik.innerHTML, /data-pomoc="model"[^>]*aria-expanded="true"/);
+    assert.match(page.wynik.innerHTML, /data-pomoc="odleglosc"[^>]*aria-expanded="false"/);
+    assert.match(page.wynik.innerHTML, /Tu koła dają/);
+  });
+});
+
+// --- Gotowe, gdy: K19 koła Kopernika jednym zdaniem jego głosem: stopnie, procent, dalej lub bliżej, bez minusa. ---
+describe("K19: koła Kopernika jednym zdaniem", () => {
+  it("Mars 27.08.2003: około 40 procent dalej, bez minusa", () => {
+    const page = buildPage();
+    assert.match(page.wynik.innerHTML, /333,06° zamiast 335,27°/);
+    assert.match(page.wynik.innerHTML, /około 40% dalej/);
+    const copy = page.wynik.innerHTML.replace(/<[^>]+>/g, " ");
+    assert.doesNotMatch(copy, /-\s?\d/);
+  });
+});
+
+// --- Gotowe, gdy: K22 każdy widoczny przycisk coś zmienia; bez zdań o obsłudze w rodzaju „Policz powtarza obliczenie". ---
+describe("K22: bez zdań o obsłudze", () => {
+  it("wstęp nie opowiada, co robi przycisk", () => {
+    const copy = pageHtml.replace(/<[^>]+>/g, " ");
+    assert.doesNotMatch(copy, /powtarza obliczenie/);
+    assert.doesNotMatch(copy, /Przycisk/);
+  });
+});
+
+// --- Gotowe, gdy: K20 zła data nie kasuje wyniku: poprzedni przygaszony, komunikat przy złym polu, aria-invalid i aria-describedby. ---
+describe("K20: zła data nie kasuje wyniku", () => {
+  it("31.02: wynik zostaje przygaszony, komunikat przy polu, atrybuty a11y", () => {
+    const page = buildPage();
+    page.dzien.value = "31";
+    page.miesiac.value = "2";
+    page.miesiac.dispatch("input");
+    assert.match(page.wynik.innerHTML, /27 sierpnia 2003 roku/);
+    assert.equal(page.wynik.classList.contains("przygaszony"), true);
+    assert.equal(page.dzien.getAttribute("aria-invalid"), "true");
+    assert.equal(page.dzien.getAttribute("aria-describedby"), "blad-dzien");
+    assert.equal(page.bladDzien.hidden, false);
+    assert.match(page.bladDzien.textContent, /nie ma/);
+  });
+
+  it("rok poza zakresem wskazuje pole roku", () => {
+    const page = buildPage();
+    page.rok.value = "1499";
+    page.rok.dispatch("input");
+    assert.equal(page.rok.getAttribute("aria-invalid"), "true");
+    assert.equal(page.bladRok.hidden, false);
+    assert.equal(page.bladDzien.hidden, true);
+  });
+
+  it("poprawa daty zdejmuje przygaszenie, komunikat i atrybuty", () => {
+    const page = buildPage();
+    page.dzien.value = "31";
+    page.miesiac.value = "2";
+    page.miesiac.dispatch("input");
+    page.miesiac.value = "3";
+    page.miesiac.dispatch("input");
+    assert.equal(page.wynik.classList.contains("przygaszony"), false);
+    assert.equal(page.dzien.getAttribute("aria-invalid"), null);
+    assert.equal(page.dzien.getAttribute("aria-describedby"), null);
+    assert.equal(page.bladDzien.hidden, true);
+    assert.match(page.wynik.innerHTML, /31 marca 2003 roku/);
   });
 });

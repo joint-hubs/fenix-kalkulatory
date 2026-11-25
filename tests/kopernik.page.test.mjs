@@ -34,6 +34,11 @@ function stubElement(tag) {
       this.children.push(child);
       if (tag === "select" && this.value === "") this.value = child.value;
     },
+    attrs: {},
+    setAttribute(k, v) { this.attrs[k] = String(v); },
+    getAttribute(k) { return this.attrs[k] ?? null; },
+    removeAttribute(k) { delete this.attrs[k]; },
+    hidden: false,
     addEventListener(type, fn) { (this.listeners[type] ||= []).push(fn); },
     dispatch(type, event = { preventDefault() {} }) {
       for (const fn of this.listeners[type] || []) fn(event);
@@ -80,12 +85,73 @@ describe("K12b: strona startuje sama po załadowaniu", () => {
     }
 
     assert.equal(elements.planeta.children.length, 5);
-    assert.match(elements.wynik.innerHTML, /Merkury/);
+    // K18: data startowa 27.08.2003 to wielkie zbliżenie Marsa, więc przy
+    // otwarciu strony wybrany jest Mars, nie pierwsza planeta z listy.
+    assert.equal(elements.planeta.value, "mars");
+    assert.match(elements.wynik.innerHTML, /Mars/);
     assert.match(elements.wynik.innerHTML, /27 sierpnia 2003 roku/);
 
     elements.planeta.value = "jowisz";
     elements.pytanie.dispatch("submit");
     assert.match(elements.wynik.innerHTML, /Jowisz/);
     assert.doesNotMatch(elements.wynik.innerHTML, /Merkury/);
+  });
+
+  it("K18: przyciski przykładów ustawiają planetę i datę razem", () => {
+    assert.ok(elements["przyklad-mars"], "strona ma przycisk przyklad-mars");
+    assert.ok(elements["przyklad-saturn"], "strona ma przycisk przyklad-saturn");
+    assert.ok(elements["przyklad-dzis"], "strona ma przycisk przyklad-dzis");
+
+    elements["przyklad-mars"].dispatch("click");
+    assert.equal(elements.planeta.value, "mars");
+    assert.equal(elements.dzien.value, "27");
+    assert.equal(elements.miesiac.value, "8");
+    assert.equal(elements.rok.value, "2003");
+    assert.match(elements.wynik.innerHTML, /Mars stoi w Rybach/);
+
+    elements["przyklad-saturn"].dispatch("click");
+    assert.equal(elements.planeta.value, "saturn");
+    assert.equal(elements.rok.value, "1543");
+    assert.match(elements.wynik.innerHTML, /Saturn/);
+
+    elements["przyklad-dzis"].dispatch("click");
+    const dzis = new Date();
+    assert.equal(elements.dzien.value, String(dzis.getDate()));
+    assert.equal(elements.miesiac.value, String(dzis.getMonth() + 1));
+    assert.equal(elements.rok.value, String(dzis.getFullYear()));
+    assert.equal(elements.planeta.value, "saturn");
+  });
+
+  it("K21: po wybraniu przykładu formularz się zwija i zdanie z wynikiem jest widoczne", () => {
+    assert.ok(elements["szczegoly"], "formularz jest w zwijanym pudle");
+    elements["przyklad-mars"].dispatch("click");
+    assert.equal(elements["szczegoly"].open, false);
+    assert.match(elements.wynik.innerHTML, /Wynik dla planety Mars/);
+  });
+
+  it("K13: rysunek stawia planetę w różnych miejscach dla różnych dat i mówi prawdę w podpisie", () => {
+    const pozycjaPlanety = () => {
+      const m = elements.wynik.innerHTML.match(/class="planeta"[^>]*cx="([0-9.]+)"[^>]*cy="([0-9.]+)"/);
+      assert.ok(m, "rysunek ma kropkę planety");
+      return `${m[1]},${m[2]}`;
+    };
+
+    elements["przyklad-mars"].dispatch("click");
+    const mars = pozycjaPlanety();
+    elements.planeta.value = "jowisz";
+    elements.planeta.dispatch("change");
+    elements.dzien.value = "24";
+    elements.dzien.dispatch("input");
+    elements.miesiac.value = "11";
+    elements.miesiac.dispatch("input");
+    elements.rok.value = "2026";
+    elements.rok.dispatch("input");
+    const jowisz = pozycjaPlanety();
+    assert.notEqual(mars, jowisz, "kropka planety zależy od daty i planety");
+
+    const podpis = elements.wynik.innerHTML;
+    assert.match(podpis, /<figcaption[^>]*>[^<]*Słońce/);
+    assert.match(podpis, /Kopernika/);
+    assert.match(podpis, /Ziemi/);
   });
 });

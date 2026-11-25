@@ -50,6 +50,37 @@ export const ZODIAC = [
   "Ryby",
 ];
 
+// Genitive and locative forms of the signs, for "po początku Ryb" (K15)
+// and "stoi w Rybach" (K14). Same order as ZODIAC.
+export const ZODIAC_GENITIVE = [
+  "Barana",
+  "Byka",
+  "Bliźniąt",
+  "Raka",
+  "Lwa",
+  "Panny",
+  "Wagi",
+  "Skorpiona",
+  "Strzelca",
+  "Koziorożca",
+  "Wodnika",
+  "Ryb",
+];
+export const ZODIAC_LOCATIVE = [
+  "Baranie",
+  "Byku",
+  "Bliźniętach",
+  "Raku",
+  "Lwie",
+  "Pannie",
+  "Wadze",
+  "Skorpionie",
+  "Strzelcu",
+  "Koziorożcu",
+  "Wodniku",
+  "Rybach",
+];
+
 // JPL Table 2a: value at J2000 and change per century.
 // Order of the fields: a, aDot, e, eDot, I, IDot, L, LDot, peri, periDot, node, nodeDot.
 export const JPL_ELEMENTS = {
@@ -222,6 +253,23 @@ export function zodiacFor(longitude) {
   return ZODIAC[index];
 }
 
+// Where inside the sign the planet stands, said in words for the page (K15):
+// "5° po początku Ryb" near the start, "5° przed końcem Ryb" near the end.
+export function signPosition(longitude) {
+  const norm = normalize360(longitude);
+  const index = Math.floor(norm / 30) % 12;
+  const into = norm - index * 30;
+  const gen = ZODIAC_GENITIVE[index];
+  const rInto = Math.round(into);
+  const rBefore = Math.round(30 - into);
+  let text;
+  if (rInto === 0) text = `dokładnie na początku ${gen}`;
+  else if (rBefore === 0) text = `dokładnie na końcu ${gen}`;
+  else if (into <= 15) text = `${rInto}° po początku ${gen}`;
+  else text = `${rBefore}° przed końcem ${gen}`;
+  return { sign: ZODIAC[index], index, into, text };
+}
+
 // ---------------------------------------------------------------------------
 // Geocentric view: where the planet stands on the sky, and how far it is.
 // ---------------------------------------------------------------------------
@@ -289,6 +337,28 @@ export function circularModel(key, jd) {
   return { modelLongitude: lambdaDate, modelDistanceAu: distanceAu };
 }
 
+// Top-down scene for the drawing (K13): Earth and planet in ecliptic-of-date
+// coordinates (au), and where the circle model would put the planet.
+export function sceneFor(key, jd) {
+  const T = (jd - GREGORIAN_EPOCH_JD) / 36525;
+  const p = precession(T) * DEG;
+  const rot = (v) => ({
+    x: v.x * Math.cos(p) - v.y * Math.sin(p),
+    y: v.x * Math.sin(p) + v.y * Math.cos(p),
+  });
+  const planet = rot(heliocentric(key, T));
+  const earth = rot(heliocentric("earth", T));
+  const model = circularModel(key, jd);
+  return {
+    planet,
+    earth,
+    model: {
+      x: model.modelDistanceAu * Math.cos(model.modelLongitude * DEG),
+      y: model.modelDistanceAu * Math.sin(model.modelLongitude * DEG),
+    },
+  };
+}
+
 // ---------------------------------------------------------------------------
 // User-facing result: everything the page shows for one date and planet.
 // ---------------------------------------------------------------------------
@@ -323,6 +393,17 @@ export function formatKm(value) {
   const [whole, frac] = Math.round(value).toString().split(".");
   const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
   return frac ? `${grouped},${frac}` : grouped;
+}
+
+// Distance in words a layperson can read (K15): millions of km with at most
+// three significant digits, switching to billions past 1000 mln km.
+export function formatMlnKm(km) {
+  if (!Number.isFinite(km)) return String(km);
+  const mln = km / 1e6;
+  if (mln >= 1000) return `${formatNumber(Math.round(mln / 10) / 100)} mld km`;
+  if (mln >= 100) return `${formatNumber(Math.round(mln))} mln km`;
+  if (mln >= 10) return `${formatNumber(Math.round(mln * 10) / 10)} mln km`;
+  return `${formatNumber(Math.round(mln * 100) / 100)} mln km`;
 }
 
 // The full result for one planet and one date. Throws TypeError with a
