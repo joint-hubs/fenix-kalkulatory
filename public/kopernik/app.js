@@ -15,6 +15,7 @@ import {
   ZODIAC_LOCATIVE,
   MIN_YEAR,
   MAX_YEAR,
+  ZODIAC,
 } from "./calc.js";
 
 // One short Polish explanation per concept, used in the tooltip on the
@@ -77,12 +78,14 @@ function rysujNiebo(w) {
   const CY = 160;
   const SKALA = 34;
   const promien = (au) => Math.sqrt(Math.max(au, 0)) * SKALA;
+  const n = (v) => Math.round(v * 10) / 10;
+  // punkt rounds at the source, so every later check (label collisions,
+  // distance to the sight line) works on the exact coordinates the SVG emits.
   const punkt = (v) => {
     const d = Math.hypot(v.x, v.y);
     const a = Math.atan2(v.y, v.x);
-    return [CX + promien(d) * Math.cos(a), CY - promien(d) * Math.sin(a)];
+    return [n(CX + promien(d) * Math.cos(a)), n(CY - promien(d) * Math.sin(a))];
   };
-  const n = (v) => Math.round(v * 10) / 10;
   const [ex, ey] = punkt(scene.earth);
   const [plx, ply] = punkt(scene.planet);
   const [mx, my] = punkt(scene.model);
@@ -93,23 +96,100 @@ function rysujNiebo(w) {
     const a = s * 30 * R;
     kreski += `<line class="kreska" x1="${n(CX + 112 * Math.cos(a))}" y1="${n(CY - 112 * Math.sin(a))}" x2="${n(CX + 124 * Math.cos(a))}" y2="${n(CY - 124 * Math.sin(a))}"></line>`;
   }
+  // Full zodiac ring: one short label per 30 degree sector, placed just past
+  // the sector's start on r=140 and nudged radially outward (beyond 145) so
+  // every label sits fully inside the 0..320 viewBox (R3).
+  let znaki = "";
+  for (let s = 0; s < 12; s += 1) {
+    const midA = (s * 30 + 10) * R;
+    const tx = CX + 140 * Math.cos(midA);
+    const ty = CY - 140 * Math.sin(midA) + 4;
+    const k = Math.hypot(tx - CX, ty - CY);
+    const tx2 = CX + ((k + 145 - 140) / k) * (tx - CX);
+    const ty2 = CY + ((k + 145 - 140) / k) * (ty - CY);
+    znaki += `<text x="${n(tx2)}" y="${n(ty2)}" text-anchor="middle" class="znak-nazwa${s === znakStart / 30 ? " aktywny" : ""}">${ZODIAC[s]}</text>`;
+  }
+  // Body labels (R2): one name per body, placed by trying candidate offsets
+  // around each dot and taking the first that clears every dot (2px margin),
+  // stays 2px off the sight line and does not overlap an already placed label.
+  const etykietyCial = () => {
+    const ciala = [
+      { x: CX, y: CY, tekst: "Słońce" },
+      { x: ex, y: ey, tekst: "Ziemia" },
+      { x: plx, y: ply, tekst: planet.name },
+    ];
+    const pudlaKropek = ciala.map((c) => ({ x0: c.x - 6, x1: c.x + 6, y0: c.y - 6, y1: c.y + 6 }));
+    const linia = { x1: ex, y1: ey, x2: plx, y2: ply };
+    const pudloEtykiety = (x, y, tekst) => {
+      const szer = tekst.length * 6.2;
+      return { x0: x - szer / 2, x1: x + szer / 2, y0: y - 9, y1: y + 2 };
+    };
+    const przecina = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+    const odlegloscPunktPudlo = (px, py, b) => {
+      const dx = Math.max(b.x0 - px, 0, px - b.x1);
+      const dy = Math.max(b.y0 - py, 0, py - b.y1);
+      return Math.hypot(dx, dy);
+    };
+    const odlegloscOdcinkaPudlo = (b) => {
+      let min = Infinity;
+      for (let t = 0; t <= 1; t += 0.02) {
+        const px = linia.x1 + (linia.x2 - linia.x1) * t;
+        const py = linia.y1 + (linia.y2 - linia.y1) * t;
+        min = Math.min(min, odlegloscPunktPudlo(px, py, b));
+      }
+      return min;
+    };
+    const zajete = [];
+    const wyniki = [];
+    for (const cialo of ciala) {
+      const szer = cialo.tekst.length * 6.2;
+      const kandydaci = [
+        [0, -12],
+        [0, 17],
+        [szer / 2 + 8, -3.5],
+        [-(szer / 2 + 8), -3.5],
+        [szer / 2 + 8, -12],
+        [-(szer / 2 + 8), -12],
+        [szer / 2 + 8, 17],
+        [-(szer / 2 + 8), 17],
+        [0, -24],
+        [0, 29],
+      ];
+      let wybrane = null;
+      for (const [dx, dy] of kandydaci) {
+        const x = n(cialo.x + dx);
+        const y = n(cialo.y + dy);
+        const b = pudloEtykiety(x, y, cialo.tekst);
+        if (b.x0 < 4 || b.x1 > 316 || b.y0 < 4 || b.y1 > 316) continue;
+        if (pudlaKropek.some((p) => przecina(b, p))) continue;
+        if (odlegloscOdcinkaPudlo(b) < 2) continue;
+        if (zajete.some((z) => przecina(b, z))) continue;
+        wybrane = { x, y };
+        zajete.push(b);
+        break;
+      }
+      // Fallback: place the label above the dot even if it collides.
+      wyniki.push(wybrane ?? { x: n(cialo.x), y: n(cialo.y - 12) });
+    }
+    return wyniki
+      .map((e, i) => `<text x="${e.x}" y="${e.y}" text-anchor="middle" class="napis">${ciala[i].tekst}</text>`)
+      .join("");
+  };
+
   const a1 = znakStart * R;
   const a2 = (znakStart + 30) * R;
-  const midA = (znakStart + 15) * R;
   return `<svg viewBox="0 0 320 320" role="img" aria-label="Rzut z góry: Słońce, orbity Ziemi i planety, obie ciała na swoich miejscach, linia wzroku i obwódka znaków zodiaku">
     <circle class="kolo" cx="${CX}" cy="${CY}" r="${n(promien(1))}"></circle>
     <circle class="kolo" cx="${CX}" cy="${CY}" r="${n(rPlanety)}"></circle>
     ${kreski}
     <path class="znak-aktywny" d="M ${n(CX + 118 * Math.cos(a1))} ${n(CY - 118 * Math.sin(a1))} A 118 118 0 0 0 ${n(CX + 118 * Math.cos(a2))} ${n(CY - 118 * Math.sin(a2))}"></path>
-    <text x="${n(CX + 140 * Math.cos(midA))}" y="${n(CY - 140 * Math.sin(midA) + 4)}" text-anchor="middle" class="znak-nazwa">${w.zodiac}</text>
+    ${znaki}
     <line class="linia-wzroku" x1="${n(ex)}" y1="${n(ey)}" x2="${n(plx)}" y2="${n(ply)}"></line>
     <circle class="cien" cx="${n(mx)}" cy="${n(my)}" r="4"></circle>
-    <circle class="slonce" cx="${CX}" cy="${CY}" r="6"></circle>
+    <circle class="slonce" cx="${CX}" cy="${CY}" r="4"></circle>
     <circle class="ziemia" cx="${n(ex)}" cy="${n(ey)}" r="4"></circle>
     <circle class="planeta" cx="${n(plx)}" cy="${n(ply)}" r="4"></circle>
-    <text x="${CX}" y="${CY + 20}" text-anchor="middle" class="napis">Słońce</text>
-    <text x="${n(ex + 6)}" y="${n(ey - 6)}" class="napis">Ziemia</text>
-    <text x="${n(plx + 6)}" y="${n(ply - 6)}" class="napis">${w.planet}</text>
+    ${etykietyCial()}
   </svg>`;
 }
 
