@@ -144,6 +144,111 @@ function sprawdzEtykiety(svg, nazwa) {
   }
 }
 
+// --- FOC-1963: szerokość rysunku nieba. node --test nie ma przeglądarki, więc
+// test liczy szerokość pudełka z wartości w style.css dokładnie tak, jak robi
+// to krok expectBox w page-check: szerokość okna minus marginesy main, odstępy
+// karty #wynik i jej ramka. 1rem = 16 px (strona nie zmienia font-size). ---
+
+const REM = 16;
+
+// Treść bloku @media (zliczanie nawiasów, bo blok zawiera własne reguły).
+function blokMedia(cssSrc, query) {
+  const start = cssSrc.indexOf(`@media ${query}`);
+  assert.ok(start !== -1, `style.css nie ma @media ${query}`);
+  const otwarcie = cssSrc.indexOf("{", start);
+  let glebokosc = 0;
+  for (let i = otwarcie; i < cssSrc.length; i += 1) {
+    if (cssSrc[i] === "{") glebokosc += 1;
+    else if (cssSrc[i] === "}") {
+      glebokosc -= 1;
+      if (glebokosc === 0) return cssSrc.slice(otwarcie + 1, i);
+    }
+  }
+  assert.fail(`@media ${query} nie jest domknięty`);
+}
+
+// CSS bez bloków @media, czyli reguły obowiązujące na szerokim ekranie.
+function bezMedia(cssSrc) {
+  return cssSrc.replace(/@media[^{]*\{(?:[^{}]|\{[^{}]*\})*\}/g, "");
+}
+
+function reguly(blok) {
+  return [...blok.matchAll(/([^\{\}]+)\{([^\}]*)\}/g)].map((m) => ({
+    selektor: m[1].trim(),
+    deklaracje: m[2],
+  }));
+}
+
+function regulaZe(zrodlo, selektor) {
+  const znalezione = reguly(zrodlo).filter((r) => r.selektor === selektor);
+  return znalezione.length ? znalezione[znalezione.length - 1].deklaracje : null;
+}
+
+function deklaracja(deklaracje, wlasciwosc) {
+  if (deklaracje === null) return null;
+  const m = deklaracje.match(new RegExp(`(?:^|;)\\s*${wlasciwosc}\\s*:\\s*([^;]+)`));
+  return m ? m[1].trim() : null;
+}
+
+// Boczny odstęp skrótu padding ("1rem", "1rem 0.75rem 2rem", ...) w px.
+function paddingBocznyPx(deklaracje) {
+  const wartosc = deklaracja(deklaracje, "padding");
+  assert.ok(wartosc !== null, "reguła nie ma paddingu");
+  const czesci = wartosc.split(/\s+/).map((v) =>
+    v.endsWith("rem") ? parseFloat(v) * REM : parseFloat(v)
+  );
+  const [gora, bok = gora, dol = gora, lewo = bok] = czesci;
+  return lewo;
+}
+
+// Szerokość svg rysunku przy danym oknie, liczona z kaskady: w wąskim oknie
+// reguła z @media nadpisuje odstęp karty, a gdy jej nie ma, obowiązuje baza.
+function szerokoscRysunku(cssSrc, waskieOkno) {
+  const baza = bezMedia(cssSrc);
+  const zrodlo = waskieOkno ? blokMedia(cssSrc, "(max-width: 420px)") : baza;
+  const mainBoczne = paddingBocznyPx(regulaZe(zrodlo, "main") ?? regulaZe(baza, "main"));
+  const wynikWMedia = regulaZe(zrodlo, "#wynik");
+  const wynikDeklaracje =
+    waskieOkno && deklaracja(wynikWMedia, "padding") ? wynikWMedia : regulaZe(baza, "#wynik");
+  const wynikBoczne = paddingBocznyPx(wynikDeklaracje);
+  const ramka = Number(deklaracja(regulaZe(baza, "#wynik"), "border").match(/(\d+(?:\.\d+)?)px/)[1]);
+
+  const kolumnaMain = waskieOkno
+    ? 390 - 2 * mainBoczne
+    : Math.min(
+        Number(deklaracja(regulaZe(baza, "main"), "max-width").match(/(\d+)px/)[1]),
+        1280
+      ) - 2 * mainBoczne;
+  const szerokoscSvg = kolumnaMain - 2 * wynikBoczne - 2 * ramka;
+  if (!waskieOkno) {
+    const capsSvg = Number(deklaracja(regulaZe(baza, "svg"), "max-width").match(/(\d+)px/)[1]);
+    return { szerokoscKarty: kolumnaMain, szerokoscSvg: Math.min(szerokoscSvg, capsSvg) };
+  }
+  return { szerokoscKarty: kolumnaMain, szerokoscSvg };
+}
+
+describe("FOC-1963: rysunek nieba ma co najmniej 340 px szerokości na telefonie", () => {
+  it("W1: przy oknie 390x844 svg rysunku ma co najmniej 340 px", () => {
+    const { szerokoscSvg } = szerokoscRysunku(css, true);
+    assert.ok(szerokoscSvg >= 340, `svg ma ${szerokoscSvg}px, kryterium to co najmniej 340px`);
+  });
+
+  it("W2: przy oknie 1280x800 rysunek ma od 420 do 460 px (bez zmiany względem dziś)", () => {
+    const { szerokoscSvg } = szerokoscRysunku(css, false);
+    assert.ok(
+      szerokoscSvg >= 420 && szerokoscSvg <= 460,
+      `svg ma ${szerokoscSvg}px, kryterium to od 420 do 460px`
+    );
+  });
+
+  it("W3: przy oknie 390x844 karta z rysunkiem mieści się w oknie, bez poziomego przewijania", () => {
+    assert.match(css, /\*\s*\{[^}]*box-sizing:\s*border-box/, "box-sizing: border-box pilnuje, by odstępy nie doszły do szerokości");
+    const { szerokoscKarty, szerokoscSvg } = szerokoscRysunku(css, true);
+    assert.ok(szerokoscKarty <= 390, `karta ma ${szerokoscKarty}px przy oknie 390px`);
+    assert.ok(szerokoscSvg > 0 && szerokoscSvg <= szerokoscKarty, "svg mieści się w karcie");
+  });
+});
+
 describe("FOC-1886: czytelny rysunek nieba", () => {
   it("R1: rysunek wypełnia kolumnę (brak capsy 320px, svg ma width 100%)", () => {
     assert.doesNotMatch(css, /max-width:\s*320px/, "svg ma capsę max-width: 320px");
