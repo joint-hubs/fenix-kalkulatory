@@ -323,6 +323,10 @@ footer p {
     padding: 1rem 0.75rem 2rem;
   }
 
+  #wynik {
+    padding: 0.5rem;
+  }
+
   #wynik dl {
     grid-template-columns: 1fr;
   }
