@@ -1,6 +1,6 @@
 # Ocena: kalkulator Kopernika
 
-Plan: [docs/plany/kopernik.md](../plany/kopernik.md). Zadanie HQ: FOC-1828. PR: joint-hubs/fenix-kalkulatory#9 (commit 40e7ae0; runda 1 była w PR 8, commit 88d3fc84). Podgląd: https://fenix-kalkulatory--kopernik-pngktjr5.web.app/kopernik/ (ważny do 9.12.2026).
+Plan: [docs/plany/kopernik.md](../plany/kopernik.md). Zadanie HQ: FOC-1828. PR: joint-hubs/fenix-kalkulatory#9, scalony 25.11 jako d021439 (ostatni commit 68d61f2; runda 1 była w PR 8, commit 88d3fc84, zamknięty razem z nim). Podgląd: https://fenix-kalkulatory--kopernik-pngktjr5.web.app/kopernik/ (ważny do 9.12.2026).
 
 ## Ocena właściciela
 
@@ -63,3 +63,12 @@ Plan: [docs/plany/kopernik.md](../plany/kopernik.md). Zadanie HQ: FOC-1828. PR: 
 - Błędy Fenixa (FOC-1876): (1) zapis werdyktu padł na EACCES, bo łańcuch rund sięgał do katalogu verdicts poprzedniego runu z inną grupą; (2) zapisany werdykt rundy 4 nie ma sha kandydata, więc bramka publikacji wzięła kandydata z rundy 3 i odmówiła („branch-moved”), a Supervisor próbował wypchnąć ręcznie.
 - Interwencje lidera: (8) odczyt katalogu verdicts runu 5d8c dla grupy fenix i odpowiedź „A” na gate-test-2-1; (9) zgoda „yes” na gate-supervisor-2; (10) odrzucenie okna zgody na ręczny `git push` z notatką; (11) podgląd wystawiony z commita 68d61f2 pobranego z mamut (PR 9 nadal wskazuje 40e7ae0).
 - Sprawdzenie lidera w przeglądarce: zdanie z wynikiem jest („Mars stoi w Rybach i cofa się na tle gwiazd”), liczby po ludzku (55,8 mln km, „5° po początku Ryb”, 8 minut światła ze Słońca), przyciski przykładów działają (Saturn 1543: kalendarz juliański, „około 5% bliżej”), przyciski „?” otwierają objaśnienia z nazwą planety i datą, na telefonie 390×844 zdanie z wynikiem jest widoczne bez przewijania. Słabe: rysunek nieba jest mały, Ziemia i Mars z podpisami nachodzą na siebie, pas zodiaku ma podpis tylko przy jednym znaku; objaśnienie ruchu wstecznego dla 1543 kończy się „Dziś: cofa się”.
+
+## Zakończenie (25.11 wieczorem)
+
+- Właściciel: „Zrób PR 9”. Commit 68d61f2 był tylko na mamucie, więc lider przeniósł go paczką `git bundle` i wypchnął na gałąź PR 9 (przesunięcie do przodu z 40e7ae0, bez przepisywania historii).
+- Przed wypchnięciem: `npm test` 140/140 na laptopie, brak półpauz i pauz w `public/kopernik/`, strona sprawdzona w przeglądarce przy 390×844 (start bez kliknięcia, przykład Saturna przelicza wynik, rysunek widoczny, konsola bez błędów).
+- PR 9 scalony do `main` (d021439), CI zielone. PR 8 zamknięty automatycznie jako scalony. FOC-1828: Done.
+- Interwencja lidera: (12) ręczna publikacja zamiast bramki, bo werdykt rundy 4 nie miał sha kandydata. Poprawka tego błędu jest w fenix-agents PR 70 (FOC-1876); mamut jeszcze jej nie ma.
+- Uwagi z rundy 4 o rysunku nieba (mały, nachodzące podpisy, jeden podpis na pasie zodiaku) zostają do ewentualnej kolejnej rundy.
+- Wniosek: tester bez przeglądarki dwa razy dał „pass” stronie, która nie działała. Stąd FOC-1868 (tester sprawdza stronę w prawdziwej przeglądarce).
